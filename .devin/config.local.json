@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Exec(node)",
+      "Exec(supabase)",
+      "Exec(vercel)",
+      "Exec(npx)",
+      "Exec(npm init)",
+      "Exec(npm install)",
+      "Exec(mkdir)",
+      "Exec(cp)",
+      "Exec(npm run)",
+      "Exec(./node_modules/.bin/next lint)",
+      "Exec(mv)",
+      "Exec(sed)",
+      "Exec(git add)"
+    ]
+  }
+}
