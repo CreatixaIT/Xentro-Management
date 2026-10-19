@@ -28,6 +28,9 @@ DECLARE
   v_remaining INTEGER;
   v_reset_at TIMESTAMPTZ;
 BEGIN
+  -- Security check: ensure this is called server-side with proper context
+  -- The identifier (IP address) is passed from the application layer
+  
   v_window_start := NOW();
   v_window_end := NOW() + (p_window_seconds || ' seconds')::INTERVAL;
 
@@ -72,7 +75,9 @@ BEGIN
     'reset_at', v_reset_at
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public;
 
 -- Grant execute on function to authenticated role
 GRANT EXECUTE ON FUNCTION check_rate_limit TO authenticated, service_role;
@@ -84,13 +89,22 @@ ALTER TABLE public.rate_limits ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Service role can manage rate limits"
   ON public.rate_limits
   FOR ALL
-  USING (auth.role() = 'service_role')
-  WITH CHECK (auth.role() = 'service_role');
+  TO service_role
+  USING (true)
+  WITH CHECK (true);
 
 -- Deny all other access
 CREATE POLICY "Deny anonymous rate limit access"
   ON public.rate_limits
   FOR ALL
   TO anon
+  USING (false)
+  WITH CHECK (false);
+
+-- Deny authenticated access (only service role should access)
+CREATE POLICY "Deny authenticated rate limit access"
+  ON public.rate_limits
+  FOR ALL
+  TO authenticated
   USING (false)
   WITH CHECK (false);

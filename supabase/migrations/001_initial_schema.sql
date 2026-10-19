@@ -36,7 +36,9 @@ BEGIN
   NEW.updated_at = NOW();
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public;
 
 -- Trigger to automatically update updated_at
 CREATE TRIGGER update_profiles_updated_at
@@ -53,12 +55,14 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view own profile"
   ON public.profiles
   FOR SELECT
+  TO authenticated
   USING (auth.uid() = id);
 
 -- Users can update their own profile (restricted fields)
 CREATE POLICY "Users can update own profile"
   ON public.profiles
   FOR UPDATE
+  TO authenticated
   USING (auth.uid() = id)
   WITH CHECK (
     auth.uid() = id
@@ -70,20 +74,23 @@ CREATE POLICY "Users can update own profile"
 CREATE POLICY "Service role can insert profiles"
   ON public.profiles
   FOR INSERT
-  WITH CHECK (auth.role() = 'service_role');
+  TO service_role
+  WITH CHECK (true);
 
 -- Service role can read all profiles (for admin operations)
 CREATE POLICY "Service role can view all profiles"
   ON public.profiles
   FOR SELECT
-  USING (auth.role() = 'service_role');
+  TO service_role
+  USING (true);
 
 -- Service role can update all profiles (for admin operations)
 CREATE POLICY "Service role can update all profiles"
   ON public.profiles
   FOR UPDATE
-  USING (auth.role() = 'service_role')
-  WITH CHECK (auth.role() = 'service_role');
+  TO service_role
+  USING (true)
+  WITH CHECK (true);
 
 -- Deny anonymous access
 CREATE POLICY "Deny anonymous access"
