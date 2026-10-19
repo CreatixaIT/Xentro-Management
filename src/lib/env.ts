@@ -8,8 +8,8 @@ export function validateEnv(): void {
   const requiredVars = [
     'NEXT_PUBLIC_APP_URL',
     'NEXT_PUBLIC_SUPABASE_URL',
-    'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-    'SUPABASE_SERVICE_ROLE_KEY',
+    'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY',
+    'SUPABASE_SECRET_KEY',
     'NID_ENCRYPTION_KEY',
   ];
 
@@ -46,8 +46,8 @@ export function getEnvErrorMessage(): string {
   const requiredVars = [
     'NEXT_PUBLIC_APP_URL',
     'NEXT_PUBLIC_SUPABASE_URL',
-    'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-    'SUPABASE_SERVICE_ROLE_KEY',
+    'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY',
+    'SUPABASE_SECRET_KEY',
     'NID_ENCRYPTION_KEY',
   ];
 

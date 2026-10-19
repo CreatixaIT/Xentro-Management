@@ -13,7 +13,15 @@
       "Exec(./node_modules/.bin/next lint)",
       "Exec(mv)",
       "Exec(sed)",
-      "Exec(git add)"
+      "Exec(git add)",
+      "Exec(git commit)",
+      "Exec(rm)",
+      "Exec(git reset)",
+      "Exec(git checkout)",
+      "Exec(cat)",
+      "Exec(kill)",
+      "Exec(git remote)",
+      "Exec(git fetch)"
     ]
   }
 }
