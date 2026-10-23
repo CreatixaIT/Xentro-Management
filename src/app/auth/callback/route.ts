@@ -18,18 +18,12 @@ export async function GET(request: NextRequest) {
 
     if (!error) {
       // Successfully verified email - redirect to sign in with success message
-      const forwardedHost = request.headers.get('x-forwarded-host');
-      const isLocalEnv = process.env.NODE_ENV === 'development';
-      if (isLocalEnv) {
-        return NextResponse.redirect(`${origin}/sign-in?verified=1`);
-      } else if (forwardedHost) {
-        return NextResponse.redirect(`https://${forwardedHost}/sign-in?verified=1`);
-      } else {
-        return NextResponse.redirect(`${origin}/sign-in?verified=1`);
-      }
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || origin;
+      return NextResponse.redirect(`${appUrl}/sign-in?verified=1`);
     }
   }
 
   // Error or no code - redirect to sign in with error
-  return NextResponse.redirect(`${origin}/sign-in?error=verification_failed`);
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || origin;
+  return NextResponse.redirect(`${appUrl}/sign-in?error=verification_failed`);
 }

@@ -495,7 +495,7 @@ export default function SignUpPage() {
             <button
               type="submit"
               disabled={isSubmitting || (usernameStatus !== 'available' && !!formData.username)}
-              className="w-full g-[#E31C25] hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl"
+              className="w-full bg-[#E31C25] hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl"
             >
               {isSubmitting ? 'Creating Account...' : 'Create Account'}
             </button>
