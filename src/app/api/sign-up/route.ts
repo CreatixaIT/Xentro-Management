@@ -19,6 +19,31 @@ export async function POST(request: NextRequest) {
   const correlationId = randomUUID();
 
   try {
+    // Validate environment variables
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+      console.error('[Signup] Missing NEXT_PUBLIC_SUPABASE_URL');
+      return NextResponse.json(
+        { message: 'Server configuration error. Please contact support.' },
+        { status: 500 }
+      );
+    }
+
+    if (!process.env.SUPABASE_SECRET_KEY) {
+      console.error('[Signup] Missing SUPABASE_SECRET_KEY');
+      return NextResponse.json(
+        { message: 'Server configuration error. Please contact support.' },
+        { status: 500 }
+      );
+    }
+
+    if (!process.env.NID_ENCRYPTION_KEY) {
+      console.error('[Signup] Missing NID_ENCRYPTION_KEY');
+      return NextResponse.json(
+        { message: 'Server configuration error. Please contact support.' },
+        { status: 500 }
+      );
+    }
+
     // Rate limiting
     const clientIp = getClientIp(request);
     const rateLimit = await checkRateLimit(clientIp, 'sign-up', 5, 300); // 5 requests per 5 minutes
@@ -186,7 +211,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (authError || !authData.user) {
-      console.error('Auth user creation error:', authError);
+      console.error(`[Signup][${correlationId}] Auth user creation error:`, authError);
       return NextResponse.json(
         { message: 'Failed to create account. Please try again.' },
         { status: 500 }
@@ -206,6 +231,7 @@ export async function POST(request: NextRequest) {
         });
 
       if (uploadError) {
+        console.error(`[Signup][${correlationId}] Photo upload failed:`, uploadError);
         throw new Error(`Photo upload failed: ${uploadError.message}`);
       }
 
@@ -233,6 +259,7 @@ export async function POST(request: NextRequest) {
         });
 
       if (profileError) {
+        console.error(`[Signup][${correlationId}] Profile creation failed:`, profileError);
         throw new Error(`Profile creation failed: ${profileError.message}`);
       }
 
@@ -252,7 +279,7 @@ export async function POST(request: NextRequest) {
       );
     } catch (error) {
       // Cleanup: delete auth user if profile creation failed
-      console.error('Profile creation error, cleaning up auth user:', error);
+      console.error(`[Signup][${correlationId}] Profile creation error, cleaning up auth user:`, error);
       await serviceRoleClient.auth.admin.deleteUser(userId);
 
       return NextResponse.json(
@@ -261,7 +288,7 @@ export async function POST(request: NextRequest) {
       );
     }
   } catch (error) {
-    console.error('Signup error:', error);
+    console.error(`[Signup][${correlationId}] Unexpected error:`, error);
     return NextResponse.json(
       { message: 'An unexpected error occurred' },
       { status: 500 }

@@ -17,6 +17,13 @@ export async function checkRateLimit(
   windowSeconds: number = 60
 ): Promise<RateLimitResult> {
   try {
+    // Check environment before creating client
+    if (!process.env.SUPABASE_SECRET_KEY || !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+      console.error('[RateLimit] Missing Supabase environment variables, skipping rate limit');
+      // Fail open - allow request if rate limiter is misconfigured
+      return { allowed: true, remaining: maxRequests, resetAt: null };
+    }
+
     const supabase = createServiceRoleClient();
 
     const { data, error } = await supabase.rpc('check_rate_limit', {
@@ -27,7 +34,7 @@ export async function checkRateLimit(
     });
 
     if (error) {
-      console.error('Rate limit check error:', error);
+      console.error('[RateLimit] RPC error:', error);
       // Fail open - allow request if rate limiter fails
       return { allowed: true, remaining: maxRequests, resetAt: null };
     }
@@ -38,7 +45,7 @@ export async function checkRateLimit(
       resetAt: data.reset_at,
     };
   } catch (error) {
-    console.error('Rate limit check error:', error);
+    console.error('[RateLimit] Exception:', error);
     // Fail open - allow request if rate limiter fails
     return { allowed: true, remaining: maxRequests, resetAt: null };
   }
