@@ -40,6 +40,35 @@ $$ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public;
 
+-- Helper function to verify role/status haven't changed during profile update
+-- This SECURITY DEFINER function has fixed search_path and auth.uid() check
+-- Prevents RLS recursion by bypassing RLS to check current values
+CREATE OR REPLACE FUNCTION verify_profile_unchanged_fields(
+  p_id UUID,
+  p_new_role TEXT,
+  p_new_status TEXT
+) RETURNS BOOLEAN AS $$
+DECLARE
+  v_current_role TEXT;
+  v_current_status TEXT;
+BEGIN
+  -- Verify the user is updating their own profile
+  IF auth.uid() IS DISTINCT FROM p_id THEN
+    RETURN FALSE;
+  END IF;
+
+  -- Get current role and status (bypasses RLS via SECURITY DEFINER)
+  SELECT role, status INTO v_current_role, v_current_status
+  FROM public.profiles
+  WHERE id = p_id;
+
+  -- Ensure role and status haven't changed
+  RETURN v_current_role = p_new_role AND v_current_status = p_new_status;
+END;
+$$ LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public;
+
 -- Trigger to automatically update updated_at
 CREATE TRIGGER update_profiles_updated_at
   BEFORE UPDATE ON public.profiles
@@ -59,6 +88,8 @@ CREATE POLICY "Users can view own profile"
   USING (auth.uid() = id);
 
 -- Users can update their own profile (restricted fields)
+-- Cannot change role or status - those require admin approval
+-- Uses helper function verify_profile_unchanged_fields to prevent RLS recursion
 CREATE POLICY "Users can update own profile"
   ON public.profiles
   FOR UPDATE
@@ -66,8 +97,7 @@ CREATE POLICY "Users can update own profile"
   USING (auth.uid() = id)
   WITH CHECK (
     auth.uid() = id
-    AND role = (SELECT role FROM public.profiles WHERE id = auth.uid())
-    AND status = (SELECT status FROM public.profiles WHERE id = auth.uid())
+    AND verify_profile_unchanged_fields(id, role, status)
   );
 
 -- Service role can insert profiles (for signup)

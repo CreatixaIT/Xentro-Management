@@ -28,17 +28,17 @@ DECLARE
   v_remaining INTEGER;
   v_reset_at TIMESTAMPTZ;
 BEGIN
-  -- Security check: ensure this is called server-side with proper context
-  -- The identifier (IP address) is passed from the application layer
+  -- Security: this function is SECURITY DEFINER and only callable by service_role
+  -- Fully qualify all table references to prevent schema injection
   
   v_window_start := NOW();
   v_window_end := NOW() + (p_window_seconds || ' seconds')::INTERVAL;
 
-  -- Clean up old entries
+  -- Clean up old entries (outside the critical path)
   DELETE FROM public.rate_limits
   WHERE window_end < NOW();
 
-  -- Check existing entry
+  -- Check existing entry with row lock to prevent race conditions
   SELECT request_count, window_end INTO v_current_count, v_reset_at
   FROM public.rate_limits
   WHERE identifier = p_identifier
@@ -79,8 +79,10 @@ $$ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public;
 
--- Grant execute on function to authenticated role
-GRANT EXECUTE ON FUNCTION check_rate_limit TO authenticated, service_role;
+-- Grant execute on function to service role only (server-side rate limiting)
+-- Authenticated users should not call this directly
+REVOKE EXECUTE ON FUNCTION check_rate_limit(TEXT, TEXT, INTEGER, INTEGER) FROM authenticated, anon, public;
+GRANT EXECUTE ON FUNCTION check_rate_limit(TEXT, TEXT, INTEGER, INTEGER) TO service_role;
 
 -- Enable RLS on rate_limits
 ALTER TABLE public.rate_limits ENABLE ROW LEVEL SECURITY;
