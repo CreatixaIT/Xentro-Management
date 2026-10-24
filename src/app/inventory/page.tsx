@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import AppLayout from '@/components/AppLayout';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -61,7 +60,6 @@ const COLUMN_LABELS: Record<string, string> = {
 };
 
 export default function InventoryPage() {
-  const supabase = createClient();
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -109,8 +107,11 @@ export default function InventoryPage() {
   }, [selectedMonth, selectedYear, dateBasis, selectedCategory, selectedReceipt, selectedPaidBy, searchQuery, sortBy, sortOrder]);
 
   const fetchCategories = async () => {
-    const { data } = await supabase.from('inventory_categories').select('*').order('name');
-    if (data) setCategories(data);
+    const response = await fetch('/api/inventory/categories');
+    const result = await response.json();
+    if (response.ok && result.categories) {
+      setCategories(result.categories);
+    }
   };
 
   const fetchInventory = async () => {
@@ -126,66 +127,13 @@ export default function InventoryPage() {
     params.append('sortBy', sortBy);
     params.append('sortOrder', sortOrder);
 
-    const { data } = await supabase
-      .from('inventory')
-      .select('*')
-      .order(sortBy, { ascending: sortOrder === 'asc' });
+    const response = await fetch(`/api/inventory?${params.toString()}`);
+    const result = await response.json();
 
-    if (data) {
-      // Apply client-side filtering for date since we're using select all
-      let filtered = data;
-      
-      if (selectedMonth !== -1 && selectedYear !== -1) {
-        const startDate = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-01`;
-        const endDate = new Date(selectedYear, selectedMonth + 1, 0).toISOString().split('T')[0];
-        
-        if (dateBasis === 'purchase_date') {
-          filtered = filtered.filter(item => 
-            item.purchase_date >= startDate && item.purchase_date <= endDate
-          );
-        } else {
-          filtered = filtered.filter(item => 
-            item.created_at >= startDate && item.created_at <= endDate
-          );
-        }
-      } else if (selectedYear !== -1) {
-        const startDate = `${selectedYear}-01-01`;
-        const endDate = `${selectedYear}-12-31`;
-        
-        if (dateBasis === 'purchase_date') {
-          filtered = filtered.filter(item => 
-            item.purchase_date >= startDate && item.purchase_date <= endDate
-          );
-        } else {
-          filtered = filtered.filter(item => 
-            item.created_at >= startDate && item.created_at <= endDate
-          );
-        }
-      }
-
-      if (selectedCategory !== 'all') {
-        filtered = filtered.filter(item => item.category_id === selectedCategory);
-      }
-
-      if (selectedReceipt !== 'all') {
-        filtered = filtered.filter(item => item.receipt === (selectedReceipt === 'true'));
-      }
-
-      if (selectedPaidBy !== 'all') {
-        filtered = filtered.filter(item => 
-          item.paid_by?.toLowerCase().includes(selectedPaidBy.toLowerCase())
-        );
-      }
-
-      if (searchQuery) {
-        filtered = filtered.filter(item =>
-          item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.remark?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.size?.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-      }
-
-      setInventory(filtered);
+    if (response.ok && result.inventory) {
+      setInventory(result.inventory);
+    } else {
+      setInventory([]);
     }
     setLoading(false);
   };
@@ -194,15 +142,23 @@ export default function InventoryPage() {
     if (!categoryName.trim()) return;
     
     setSaving(true);
-    const { error } = await supabase.from('inventory_categories').insert({
-      name: categoryName.trim(),
+    const response = await fetch('/api/inventory/categories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: categoryName }),
     });
 
-    if (!error) {
-      setCategoryName('');
-      setShowCategoryModal(false);
-      fetchCategories();
+    const result = await response.json();
+
+    if (!response.ok) {
+      alert(`Error: ${result.error || 'Failed to create category'}`);
+      setSaving(false);
+      return;
     }
+
+    setCategoryName('');
+    setShowCategoryModal(false);
+    fetchCategories();
     setSaving(false);
   };
 
@@ -226,25 +182,42 @@ export default function InventoryPage() {
     };
 
     if (editingItem) {
-      const { error } = await supabase
-        .from('inventory')
-        .update(itemData)
-        .eq('id', editingItem.id);
+      const response = await fetch(`/api/inventory/${editingItem.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(itemData),
+      });
       
-      if (!error) {
-        setShowAddModal(false);
-        setEditingItem(null);
-        resetForm();
-        fetchInventory();
+      const result = await response.json();
+      
+      if (!response.ok) {
+        alert(`Error: ${result.error || 'Failed to update item'}`);
+        setSaving(false);
+        return;
       }
+      
+      setShowAddModal(false);
+      setEditingItem(null);
+      resetForm();
+      fetchInventory();
     } else {
-      const { error } = await supabase.from('inventory').insert(itemData);
+      const response = await fetch('/api/inventory', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(itemData),
+      });
       
-      if (!error) {
-        setShowAddModal(false);
-        resetForm();
-        fetchInventory();
+      const result = await response.json();
+      
+      if (!response.ok) {
+        alert(`Error: ${result.error || 'Failed to create item'}`);
+        setSaving(false);
+        return;
       }
+      
+      setShowAddModal(false);
+      resetForm();
+      fetchInventory();
     }
     
     setSaving(false);
@@ -272,9 +245,15 @@ export default function InventoryPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this item?')) return;
     
-    const { error } = await supabase.from('inventory').delete().eq('id', id);
-    if (!error) {
+    const response = await fetch(`/api/inventory/${id}`, {
+      method: 'DELETE',
+    });
+
+    if (response.ok) {
       fetchInventory();
+    } else {
+      const result = await response.json();
+      alert(`Error: ${result.error || 'Failed to delete item'}`);
     }
   };
 
