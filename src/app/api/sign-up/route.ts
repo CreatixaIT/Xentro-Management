@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
+import { createClient } from '@supabase/supabase-js';
 import { encryptNID } from '@/lib/encryption';
 import {
   usernameSchema,
@@ -28,6 +29,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) {
+      console.error('[Signup] Missing NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY');
+      return NextResponse.json(
+        { message: 'Server configuration error. Please contact support.' },
+        { status: 500 }
+      );
+    }
+
     if (!process.env.SUPABASE_SECRET_KEY) {
       console.error('[Signup] Missing SUPABASE_SECRET_KEY');
       return NextResponse.json(
@@ -38,6 +47,14 @@ export async function POST(request: NextRequest) {
 
     if (!process.env.NID_ENCRYPTION_KEY) {
       console.error('[Signup] Missing NID_ENCRYPTION_KEY');
+      return NextResponse.json(
+        { message: 'Server configuration error. Please contact support.' },
+        { status: 500 }
+      );
+    }
+
+    if (!process.env.NEXT_PUBLIC_APP_URL) {
+      console.error('[Signup] Missing NEXT_PUBLIC_APP_URL');
       return NextResponse.json(
         { message: 'Server configuration error. Please contact support.' },
         { status: 500 }
@@ -200,18 +217,38 @@ export async function POST(request: NextRequest) {
     const encryptionKey = process.env.NID_ENCRYPTION_KEY!;
     const { ciphertext: nidCiphertext, iv: nidIv, authTag: nidAuthTag } = encryptNID(nid, encryptionKey);
 
-    // Create Supabase Auth user
-    const { data: authData, error: authError } = await serviceRoleClient.auth.admin.createUser({
-      email: normalizedEmail,
-      password,
-      email_confirm: true,
-      user_metadata: {
-        username: normalizedUsername,
+    // Create Supabase Auth user using regular signup (not admin API)
+    // This sends the confirmation email automatically
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
+    const publicClient = createClient(supabaseUrl, supabaseKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
       },
     });
 
-    if (authError || !authData.user) {
-      console.error(`[Signup][${correlationId}] Auth user creation error:`, authError);
+    const { data: authData, error: authError } = await publicClient.auth.signUp({
+      email: normalizedEmail,
+      password,
+      options: {
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+        data: {
+          username: normalizedUsername,
+        },
+      },
+    });
+
+    if (authError) {
+      console.error(`[Signup][${correlationId}] Auth signup error:`, authError);
+      return NextResponse.json(
+        { message: 'Failed to create account. Please try again.' },
+        { status: 500 }
+      );
+    }
+
+    if (!authData.user) {
+      console.error(`[Signup][${correlationId}] Auth signup returned no user`);
       return NextResponse.json(
         { message: 'Failed to create account. Please try again.' },
         { status: 500 }
