@@ -20,9 +20,22 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/sign-in', request.url));
   }
 
+  // Check profile status for employee routes
+  if (path.startsWith('/dashboard') || path.startsWith('/inventory') || path.startsWith('/attendance') || path.startsWith('/projects') || path.startsWith('/tasks') || path.startsWith('/settings')) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('status')
+      .eq('id', user.id)
+      .single();
+
+    if (!profile || profile.status !== 'ACTIVE') {
+      return NextResponse.redirect(new URL('/pending-approval', request.url));
+    }
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/admin/:path*', '/protected/:path*'],
+  matcher: ['/dashboard/:path*', '/admin/:path*', '/inventory/:path*', '/attendance/:path*', '/projects/:path*', '/tasks/:path*', '/settings/:path*', '/protected/:path*'],
 };
