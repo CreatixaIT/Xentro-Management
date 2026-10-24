@@ -12,6 +12,8 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const photoPath = searchParams.get('path');
 
+  console.log('Photo URL request for path:', photoPath);
+
   if (!photoPath) {
     return NextResponse.json({ error: 'Photo path is required' }, { status: 400 });
   }
@@ -22,8 +24,11 @@ export async function GET(request: Request) {
     .createSignedUrl(photoPath, 3600); // 1 hour
 
   if (error) {
+    console.error('Photo URL generation error:', error);
+    console.error('Error message:', error.message);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  console.log('Photo URL generated successfully for:', photoPath);
   return NextResponse.json({ url });
 }

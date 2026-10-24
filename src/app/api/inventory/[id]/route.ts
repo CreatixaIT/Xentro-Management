@@ -27,7 +27,12 @@ export async function PATCH(
     unit_cost,
     remark,
     photo_data,
+    photo_path,
+    original_quantity, // Accept but ignore for edits
   } = body;
+
+  console.log('PATCH request for item:', id);
+  console.log('Request body keys:', Object.keys(body));
 
   // Validation
   if (left_item !== undefined && left_item < 0) {
@@ -38,11 +43,12 @@ export async function PATCH(
     return NextResponse.json({ error: 'Remaining stock cannot exceed original quantity' }, { status: 400 });
   }
 
-  let photo_path = body.photo_path;
+  let final_photo_path = photo_path;
 
   // Handle photo upload if provided
   if (photo_data) {
     const fileName = `${user.id}/${Date.now()}.jpg`;
+    console.log('Uploading photo to:', fileName);
     const { data: uploadData, error: uploadError } = await supabase
       .storage
       .from('inventory-photos')
@@ -52,16 +58,20 @@ export async function PATCH(
       });
 
     if (uploadError) {
-      return NextResponse.json({ error: 'Failed to upload photo' }, { status: 500 });
+      console.error('Photo upload error:', uploadError);
+      return NextResponse.json({ error: `Failed to upload photo: ${uploadError.message}` }, { status: 500 });
     }
 
-    photo_path = uploadData.path;
+    final_photo_path = uploadData.path;
+    console.log('Photo uploaded successfully to:', final_photo_path);
   }
 
   const updateData: any = {
     updated_by: user.id,
   };
 
+  // Only include fields that are actually provided and should be updated
+  // Note: original_quantity should never be updated during edit
   if (name !== undefined) updateData.name = name.trim();
   if (category_id !== undefined) updateData.category_id = category_id;
   if (size !== undefined) updateData.size = size;
@@ -73,7 +83,9 @@ export async function PATCH(
   if (paid_by !== undefined) updateData.paid_by = paid_by;
   if (unit_cost !== undefined) updateData.unit_cost = unit_cost;
   if (remark !== undefined) updateData.remark = remark;
-  if (photo_path !== undefined) updateData.photo_path = photo_path;
+  if (final_photo_path !== undefined) updateData.photo_path = final_photo_path;
+
+  console.log('Update data keys:', Object.keys(updateData));
 
   // First check if the item exists
   const { data: existingItem, error: checkError } = await supabase
@@ -84,10 +96,11 @@ export async function PATCH(
 
   if (checkError) {
     console.error('Inventory check error:', checkError);
-    return NextResponse.json({ error: checkError.message }, { status: 500 });
+    return NextResponse.json({ error: `Check failed: ${checkError.message}` }, { status: 500 });
   }
 
   if (!existingItem) {
+    console.log('Item not found:', id);
     return NextResponse.json({ error: 'Item not found' }, { status: 404 });
   }
 
@@ -101,13 +114,23 @@ export async function PATCH(
 
   if (error) {
     console.error('Inventory update error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('Error code:', error.code);
+    console.error('Error message:', error.message);
+    console.error('Error details:', error.details);
+    console.error('Error hint:', error.hint);
+    return NextResponse.json({ 
+      error: `Update failed: ${error.message}`,
+      code: error.code,
+      details: error.details,
+    }, { status: 500 });
   }
 
   if (!item) {
-    return NextResponse.json({ error: 'Update failed' }, { status: 500 });
+    console.error('Update returned null for item:', id);
+    return NextResponse.json({ error: 'Update returned no data' }, { status: 500 });
   }
 
+  console.log('Update successful for item:', id);
   return NextResponse.json({ item });
 }
 

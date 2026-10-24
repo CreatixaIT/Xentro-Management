@@ -156,6 +156,7 @@ export async function POST(request: Request) {
   // Handle photo upload if provided
   if (photo_data) {
     const fileName = `${user.id}/${Date.now()}.jpg`;
+    console.log('POST: Uploading photo to:', fileName);
     const { data: uploadData, error: uploadError } = await supabase
       .storage
       .from('inventory-photos')
@@ -165,10 +166,12 @@ export async function POST(request: Request) {
       });
 
     if (uploadError) {
-      return NextResponse.json({ error: 'Failed to upload photo' }, { status: 500 });
+      console.error('POST: Photo upload error:', uploadError);
+      return NextResponse.json({ error: `Failed to upload photo: ${uploadError.message}` }, { status: 500 });
     }
 
     photo_path = uploadData.path;
+    console.log('POST: Photo uploaded successfully to:', photo_path);
   }
 
   const { data: item, error } = await supabase
@@ -193,8 +196,10 @@ export async function POST(request: Request) {
     .single();
 
   if (error) {
+    console.error('POST: Insert error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  console.log('POST: Item created successfully with photo_path:', photo_path);
   return NextResponse.json({ item });
 }

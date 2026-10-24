@@ -206,7 +206,6 @@ export default function InventoryPage() {
       unit_cost: parseFloat(formData.unit_cost) || (parseInt(formData.quantity) > 0 ? parseFloat(formData.price) / parseInt(formData.quantity) : 0),
       remark: formData.remark || null,
       left_item: formData.left_item ? parseInt(formData.left_item) : parseInt(formData.quantity),
-      original_quantity: parseInt(formData.quantity),
       photo_data: formData.photo_data || null,
       photo_path: formData.photo_path || null,
     };
@@ -231,10 +230,16 @@ export default function InventoryPage() {
       resetForm();
       fetchInventory();
     } else {
+      // For new items, include original_quantity
+      const newItemData = {
+        ...itemData,
+        original_quantity: parseInt(formData.quantity),
+      };
+      
       const response = await fetch('/api/inventory', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(itemData),
+        body: JSON.stringify(newItemData),
       });
       
       const result = await response.json();
