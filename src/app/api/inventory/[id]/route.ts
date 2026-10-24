@@ -75,12 +75,29 @@ export async function PATCH(
   if (remark !== undefined) updateData.remark = remark;
   if (photo_path !== undefined) updateData.photo_path = photo_path;
 
+  // First check if the item exists
+  const { data: existingItem, error: checkError } = await supabase
+    .from('inventory')
+    .select('id')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (checkError) {
+    console.error('Inventory check error:', checkError);
+    return NextResponse.json({ error: checkError.message }, { status: 500 });
+  }
+
+  if (!existingItem) {
+    return NextResponse.json({ error: 'Item not found' }, { status: 404 });
+  }
+
+  // Perform the update
   const { data: item, error } = await supabase
     .from('inventory')
     .update(updateData)
     .eq('id', id)
     .select('*')
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error('Inventory update error:', error);
@@ -88,7 +105,7 @@ export async function PATCH(
   }
 
   if (!item) {
-    return NextResponse.json({ error: 'Item not found' }, { status: 404 });
+    return NextResponse.json({ error: 'Update failed' }, { status: 500 });
   }
 
   return NextResponse.json({ item });

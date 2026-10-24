@@ -98,6 +98,7 @@ export default function InventoryPage() {
     unit_cost: '',
     remark: '',
     photo_data: '',
+    photo_path: '',
   });
 
   const [categoryName, setCategoryName] = useState('');
@@ -139,15 +140,25 @@ export default function InventoryPage() {
       const photoPromises = result.inventory
         .filter((item: InventoryItem) => item.photo_path)
         .map(async (item: InventoryItem) => {
-          const photoResponse = await fetch(`/api/inventory/photo-url?path=${encodeURIComponent(item.photo_path!)}`);
-          const photoResult = await photoResponse.json();
-          return { id: item.id, url: photoResult.url };
+          try {
+            const photoResponse = await fetch(`/api/inventory/photo-url?path=${encodeURIComponent(item.photo_path!)}`);
+            const photoResult = await photoResponse.json();
+            if (photoResponse.ok && photoResult.url) {
+              return { id: item.id, url: photoResult.url };
+            }
+            return null;
+          } catch (error) {
+            console.error('Failed to fetch photo URL:', error);
+            return null;
+          }
         });
       
       const photoResults = await Promise.all(photoPromises);
       const urlMap: Record<string, string> = {};
-      photoResults.forEach(({ id, url }) => {
-        urlMap[id] = url;
+      photoResults.forEach(result => {
+        if (result) {
+          urlMap[result.id] = result.url;
+        }
       });
       setPhotoUrls(urlMap);
     } else {
@@ -197,6 +208,7 @@ export default function InventoryPage() {
       left_item: formData.left_item ? parseInt(formData.left_item) : parseInt(formData.quantity),
       original_quantity: parseInt(formData.quantity),
       photo_data: formData.photo_data || null,
+      photo_path: formData.photo_path || null,
     };
 
     if (editingItem) {
@@ -256,6 +268,7 @@ export default function InventoryPage() {
       unit_cost: item.unit_cost.toString(),
       remark: item.remark || '',
       photo_data: '',
+      photo_path: item.photo_path || '',
     });
     setShowAddModal(true);
   };
@@ -289,6 +302,7 @@ export default function InventoryPage() {
       unit_cost: '',
       remark: '',
       photo_data: '',
+      photo_path: '',
     });
     setEditingItem(null);
   };
@@ -781,6 +795,19 @@ export default function InventoryPage() {
                   />
                   {formData.photo_data && (
                     <img src={formData.photo_data} alt="Preview" className="mt-2 w-32 h-32 object-cover rounded-lg" />
+                  )}
+                  {editingItem && editingItem.photo_path && !formData.photo_data && (
+                    <div className="mt-2">
+                      <span className="text-sm text-gray-600">Current photo: </span>
+                      <img 
+                        src={photoUrls[editingItem.id] || ''} 
+                        alt="Current" 
+                        className="mt-1 w-32 h-32 object-cover rounded-lg"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    </div>
                   )}
                 </div>
               </div>
