@@ -1,69 +1,844 @@
-import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
+'use client';
+
+import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import AppLayout from '@/components/AppLayout';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
-export default async function InventoryPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+interface Category {
+  id: string;
+  name: string;
+}
 
-  if (!user) {
-    redirect('/sign-in');
-  }
+interface InventoryItem {
+  id: string;
+  name: string;
+  category_id: string | null;
+  size: string | null;
+  quantity: number;
+  original_quantity: number;
+  left_item: number;
+  price: number;
+  unit_cost: number;
+  purchase_date: string;
+  receipt: boolean;
+  paid_by: string | null;
+  remark: string | null;
+  photo_path: string | null;
+  created_at: string;
+  created_by: string;
+  updated_by: string | null;
+  inventory_categories: Category | null;
+  creator: { username: string; full_name: string } | null;
+  updater: { username: string; full_name: string } | null;
+}
 
-  // Get user profile
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('full_name, designation')
-    .eq('id', user.id)
-    .single();
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
 
-  // Get inventory items
-  const { data: inventory } = await supabase
-    .from('inventory')
-    .select('*')
-    .order('created_at', { ascending: false });
+const DEFAULT_COLUMNS = [
+  'name', 'category', 'size', 'quantity', 'left_item', 'price', 'unit_cost', 
+  'purchase_date', 'receipt', 'paid_by', 'user_entry', 'remark'
+];
+
+const COLUMN_LABELS: Record<string, string> = {
+  name: 'Item Name',
+  category: 'Category',
+  size: 'Size',
+  quantity: 'Quantity',
+  left_item: 'Left Item',
+  price: 'Price (BDT)',
+  unit_cost: 'Unit Cost (BDT)',
+  purchase_date: 'Purchase Date',
+  receipt: 'Receipt',
+  paid_by: 'Paid By',
+  user_entry: 'User Entry',
+  remark: 'Remark',
+  created_at: 'Entry Date',
+};
+
+export default function InventoryPage() {
+  const supabase = createClient();
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showColumnModal, setShowColumnModal] = useState(false);
+  const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
+  const [selectedColumns, setSelectedColumns] = useState<string[]>(DEFAULT_COLUMNS);
+  
+  // Filters
+  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const [dateBasis, setDateBasis] = useState<'purchase_date' | 'created_at'>('purchase_date');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedReceipt, setSelectedReceipt] = useState<string>('all');
+  const [selectedPaidBy, setSelectedPaidBy] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Sorting
+  const [sortBy, setSortBy] = useState('purchase_date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
+  // Form state
+  const [formData, setFormData] = useState({
+    name: '',
+    category_id: '',
+    size: '',
+    quantity: '',
+    price: '',
+    purchase_date: new Date().toISOString().split('T')[0],
+    left_item: '',
+    receipt: false,
+    paid_by: '',
+    unit_cost: '',
+    remark: '',
+    photo_data: '',
+  });
+
+  const [categoryName, setCategoryName] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetchCategories();
+    fetchInventory();
+  }, [selectedMonth, selectedYear, dateBasis, selectedCategory, selectedReceipt, selectedPaidBy, searchQuery, sortBy, sortOrder]);
+
+  const fetchCategories = async () => {
+    const { data } = await supabase.from('inventory_categories').select('*').order('name');
+    if (data) setCategories(data);
+  };
+
+  const fetchInventory = async () => {
+    setLoading(true);
+    const params = new URLSearchParams();
+    params.append('month', selectedMonth.toString());
+    params.append('year', selectedYear.toString());
+    params.append('dateBasis', dateBasis);
+    if (selectedCategory !== 'all') params.append('category', selectedCategory);
+    if (selectedReceipt !== 'all') params.append('receipt', selectedReceipt);
+    if (selectedPaidBy !== 'all') params.append('paidBy', selectedPaidBy);
+    if (searchQuery) params.append('search', searchQuery);
+    params.append('sortBy', sortBy);
+    params.append('sortOrder', sortOrder);
+
+    const { data } = await supabase
+      .from('inventory')
+      .select('*')
+      .order(sortBy, { ascending: sortOrder === 'asc' });
+
+    if (data) {
+      // Apply client-side filtering for date since we're using select all
+      let filtered = data;
+      
+      if (selectedMonth !== -1 && selectedYear !== -1) {
+        const startDate = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-01`;
+        const endDate = new Date(selectedYear, selectedMonth + 1, 0).toISOString().split('T')[0];
+        
+        if (dateBasis === 'purchase_date') {
+          filtered = filtered.filter(item => 
+            item.purchase_date >= startDate && item.purchase_date <= endDate
+          );
+        } else {
+          filtered = filtered.filter(item => 
+            item.created_at >= startDate && item.created_at <= endDate
+          );
+        }
+      } else if (selectedYear !== -1) {
+        const startDate = `${selectedYear}-01-01`;
+        const endDate = `${selectedYear}-12-31`;
+        
+        if (dateBasis === 'purchase_date') {
+          filtered = filtered.filter(item => 
+            item.purchase_date >= startDate && item.purchase_date <= endDate
+          );
+        } else {
+          filtered = filtered.filter(item => 
+            item.created_at >= startDate && item.created_at <= endDate
+          );
+        }
+      }
+
+      if (selectedCategory !== 'all') {
+        filtered = filtered.filter(item => item.category_id === selectedCategory);
+      }
+
+      if (selectedReceipt !== 'all') {
+        filtered = filtered.filter(item => item.receipt === (selectedReceipt === 'true'));
+      }
+
+      if (selectedPaidBy !== 'all') {
+        filtered = filtered.filter(item => 
+          item.paid_by?.toLowerCase().includes(selectedPaidBy.toLowerCase())
+        );
+      }
+
+      if (searchQuery) {
+        filtered = filtered.filter(item =>
+          item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.remark?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.size?.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+      }
+
+      setInventory(filtered);
+    }
+    setLoading(false);
+  };
+
+  const handleAddCategory = async () => {
+    if (!categoryName.trim()) return;
+    
+    setSaving(true);
+    const { error } = await supabase.from('inventory_categories').insert({
+      name: categoryName.trim(),
+    });
+
+    if (!error) {
+      setCategoryName('');
+      setShowCategoryModal(false);
+      fetchCategories();
+    }
+    setSaving(false);
+  };
+
+  const handleSaveItem = async () => {
+    setSaving(true);
+    
+    const itemData = {
+      name: formData.name,
+      category_id: formData.category_id || null,
+      size: formData.size || null,
+      quantity: parseInt(formData.quantity),
+      price: parseFloat(formData.price) || 0,
+      purchase_date: formData.purchase_date,
+      receipt: formData.receipt,
+      paid_by: formData.paid_by || null,
+      unit_cost: parseFloat(formData.unit_cost) || (parseInt(formData.quantity) > 0 ? parseFloat(formData.price) / parseInt(formData.quantity) : 0),
+      remark: formData.remark || null,
+      left_item: formData.left_item ? parseInt(formData.left_item) : parseInt(formData.quantity),
+      original_quantity: parseInt(formData.quantity),
+      photo_data: formData.photo_data || null,
+    };
+
+    if (editingItem) {
+      const { error } = await supabase
+        .from('inventory')
+        .update(itemData)
+        .eq('id', editingItem.id);
+      
+      if (!error) {
+        setShowAddModal(false);
+        setEditingItem(null);
+        resetForm();
+        fetchInventory();
+      }
+    } else {
+      const { error } = await supabase.from('inventory').insert(itemData);
+      
+      if (!error) {
+        setShowAddModal(false);
+        resetForm();
+        fetchInventory();
+      }
+    }
+    
+    setSaving(false);
+  };
+
+  const handleEdit = (item: InventoryItem) => {
+    setEditingItem(item);
+    setFormData({
+      name: item.name,
+      category_id: item.category_id || '',
+      size: item.size || '',
+      quantity: item.quantity.toString(),
+      price: item.price.toString(),
+      purchase_date: item.purchase_date,
+      left_item: item.left_item.toString(),
+      receipt: item.receipt,
+      paid_by: item.paid_by || '',
+      unit_cost: item.unit_cost.toString(),
+      remark: item.remark || '',
+      photo_data: '',
+    });
+    setShowAddModal(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this item?')) return;
+    
+    const { error } = await supabase.from('inventory').delete().eq('id', id);
+    if (!error) {
+      fetchInventory();
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      category_id: '',
+      size: '',
+      quantity: '',
+      price: '',
+      purchase_date: new Date().toISOString().split('T')[0],
+      left_item: '',
+      receipt: false,
+      paid_by: '',
+      unit_cost: '',
+      remark: '',
+      photo_data: '',
+    });
+    setEditingItem(null);
+  };
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({ ...formData, photo_data: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const generatePDF = () => {
+    const doc = new jsPDF('l', 'mm', 'a4');
+    
+    // Title
+    doc.setFontSize(18);
+    doc.text('Xentro Management - Inventory Report', 14, 15);
+    
+    // Date and filters
+    doc.setFontSize(10);
+    const dateText = `Generated: ${new Date().toLocaleDateString()}`;
+    const periodText = selectedMonth !== -1 
+      ? `Period: ${MONTHS[selectedMonth]} ${selectedYear}`
+      : selectedYear !== -1 
+      ? `Period: ${selectedYear}`
+      : 'Period: All Dates';
+    const dateBasisText = `Date Basis: ${dateBasis === 'purchase_date' ? 'Purchase Date' : 'Entry Date'}`;
+    
+    doc.text(dateText, 14, 22);
+    doc.text(periodText, 14, 27);
+    doc.text(dateBasisText, 14, 32);
+    
+    // Summary
+    const totalRecords = inventory.length;
+    const totalQuantity = inventory.reduce((sum, item) => sum + item.quantity, 0);
+    const totalLeft = inventory.reduce((sum, item) => sum + item.left_item, 0);
+    const totalValue = inventory.reduce((sum, item) => sum + item.price, 0);
+    
+    doc.text(`Total Records: ${totalRecords}`, 14, 37);
+    doc.text(`Total Quantity: ${totalQuantity}`, 14, 42);
+    doc.text(`Total Remaining: ${totalLeft}`, 14, 47);
+    doc.text(`Total Value: BDT ${totalValue.toFixed(2)}`, 14, 52);
+    
+    // Table
+    const headers = selectedColumns.map(col => COLUMN_LABELS[col]);
+    const rows = inventory.map(item => 
+      selectedColumns.map(col => {
+        switch (col) {
+          case 'category':
+            return item.inventory_categories?.name || '—';
+          case 'user_entry':
+            return item.creator?.username || '—';
+          case 'receipt':
+            return item.receipt ? 'Yes' : 'No';
+          case 'price':
+          case 'unit_cost':
+            return `BDT ${(item[col as keyof InventoryItem] as number)?.toFixed(2) || '0.00'}`;
+          default:
+            return item[col as keyof InventoryItem]?.toString() || '—';
+        }
+      })
+    );
+    
+    autoTable(doc, {
+      head: [headers],
+      body: rows,
+      startY: 60,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [227, 28, 37] },
+    });
+    
+    doc.save(`xentro-inventory-${selectedYear}-${selectedMonth + 1}.pdf`);
+  };
+
+  const summary = {
+    totalRecords: inventory.length,
+    totalQuantity: inventory.reduce((sum, item) => sum + item.quantity, 0),
+    totalLeft: inventory.reduce((sum, item) => sum + item.left_item, 0),
+    totalValue: inventory.reduce((sum, item) => sum + item.price, 0),
+  };
 
   return (
-    <AppLayout profile={profile}>
+    <AppLayout>
       <div className="space-y-6 pb-20 md:pb-0">
+        {/* Header */}
         <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-md border border-white/30 p-6">
-          <h1 className="text-2xl font-bold text-gray-900">Inventory</h1>
-          <p className="text-gray-600 mt-1">View and manage inventory items</p>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Inventory Management</h1>
+              <p className="text-gray-600 mt-1">Track and manage inventory items</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => { resetForm(); setShowAddModal(true); }}
+                className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white font-medium rounded-lg transition-colors"
+              >
+                Add Item
+              </button>
+              <button
+                onClick={() => setShowCategoryModal(true)}
+                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors"
+              >
+                Add Category
+              </button>
+              <button
+                onClick={generatePDF}
+                className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition-colors"
+              >
+                Generate Report
+              </button>
+              <button
+                onClick={() => setShowColumnModal(true)}
+                className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors"
+              >
+                Columns
+              </button>
+            </div>
+          </div>
+          
+          {/* Filters */}
+          <div className="mt-6 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Month</label>
+              <select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+              >
+                <option value={-1}>All Months</option>
+                {MONTHS.map((m, i) => (
+                  <option key={i} value={i}>{m}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+              >
+                <option value={-1}>All Years</option>
+                {[2024, 2025, 2026, 2027].map(y => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Date Basis</label>
+              <select
+                value={dateBasis}
+                onChange={(e) => setDateBasis(e.target.value as 'purchase_date' | 'created_at')}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+              >
+                <option value="purchase_date">Purchase Date</option>
+                <option value="created_at">Entry Date</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+              >
+                <option value="all">All Categories</option>
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Receipt</label>
+              <select
+                value={selectedReceipt}
+                onChange={(e) => setSelectedReceipt(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+              >
+                <option value="all">All</option>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+              />
+            </div>
+          </div>
         </div>
 
+        {/* Summary */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-white/80 backdrop-blur-xl rounded-xl shadow-md border border-white/30 p-4">
+            <p className="text-gray-600 text-sm">Total Records</p>
+            <p className="text-2xl font-bold text-gray-900 mt-1">{summary.totalRecords}</p>
+          </div>
+          <div className="bg-white/80 backdrop-blur-xl rounded-xl shadow-md border border-white/30 p-4">
+            <p className="text-gray-600 text-sm">Total Quantity</p>
+            <p className="text-2xl font-bold text-gray-900 mt-1">{summary.totalQuantity}</p>
+          </div>
+          <div className="bg-white/80 backdrop-blur-xl rounded-xl shadow-md border border-white/30 p-4">
+            <p className="text-gray-600 text-sm">Total Remaining</p>
+            <p className="text-2xl font-bold text-gray-900 mt-1">{summary.totalLeft}</p>
+          </div>
+          <div className="bg-white/80 backdrop-blur-xl rounded-xl shadow-md border border-white/30 p-4">
+            <p className="text-gray-600 text-sm">Total Value</p>
+            <p className="text-2xl font-bold text-gray-900 mt-1">BDT {summary.totalValue.toFixed(2)}</p>
+          </div>
+        </div>
+
+        {/* Inventory List */}
         <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-md border border-white/30 p-6">
-          {inventory && inventory.length > 0 ? (
-            <div className="space-y-4">
-              {inventory.map((item) => (
-                <div key={item.id} className="border-b border-white/30 pb-4 last:border-0">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{item.name}</h3>
-                      <p className="text-sm text-gray-600 mt-1">{item.description || 'No description'}</p>
-                      <div className="flex gap-4 mt-2 text-sm">
-                        <span className="text-gray-700">Quantity: {item.quantity} {item.unit}</span>
-                        <span className="text-gray-700">Category: {item.category || '—'}</span>
-                      </div>
-                    </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      item.status === 'AVAILABLE' ? 'bg-green-100/80 text-green-700' :
-                      item.status === 'LOW_STOCK' ? 'bg-yellow-100/80 text-yellow-700' :
-                      item.status === 'OUT_OF_STOCK' ? 'bg-red-100/80 text-red-700' :
-                      'bg-gray-100/80 text-gray-700'
-                    }`}>
-                      {item.status}
-                    </span>
-                  </div>
-                </div>
-              ))}
+          {loading ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600">Loading...</p>
             </div>
-          ) : (
+          ) : inventory.length === 0 ? (
             <div className="text-center py-12">
               <span className="text-4xl">📦</span>
               <p className="text-gray-600 mt-4">No inventory items found</p>
             </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    {selectedColumns.map(col => (
+                      <th
+                        key={col}
+                        onClick={() => {
+                          if (sortBy === col) {
+                            setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+                          } else {
+                            setSortBy(col);
+                            setSortOrder('asc');
+                          }
+                        }}
+                        className="px-4 py-3 text-left text-sm font-semibold text-gray-900 cursor-pointer hover:bg-gray-50"
+                      >
+                        {COLUMN_LABELS[col]}
+                        {sortBy === col && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
+                      </th>
+                    ))}
+                    <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {inventory.map(item => (
+                    <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50">
+                      {selectedColumns.map(col => (
+                        <td key={col} className="px-4 py-3 text-sm text-gray-700">
+                          {col === 'category' && item.inventory_categories?.name}
+                          {col === 'user_entry' && item.creator?.username}
+                          {col === 'receipt' && (item.receipt ? 'Yes' : 'No')}
+                          {col === 'price' && `BDT ${item.price.toFixed(2)}`}
+                          {col === 'unit_cost' && `BDT ${item.unit_cost.toFixed(2)}`}
+                          {col !== 'category' && col !== 'user_entry' && col !== 'receipt' && col !== 'price' && col !== 'unit_cost' && item[col as keyof InventoryItem]?.toString()}
+                        </td>
+                      ))}
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          onClick={() => handleEdit(item)}
+                          className="text-blue-600 hover:text-blue-800 mr-2"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item.id)}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
+
+        {/* Add/Edit Modal */}
+        {showAddModal && (
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
+                {editingItem ? 'Edit Item' : 'Add New Item'}
+              </h2>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Item Name *</label>
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
+                    required
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                    <select
+                      value={formData.category_id}
+                      onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
+                    >
+                      <option value="">Select Category</option>
+                      {categories.map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Size</label>
+                    <input
+                      type="text"
+                      value={formData.size}
+                      onChange={(e) => setFormData({ ...formData, size: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Quantity *</label>
+                    <input
+                      type="number"
+                      value={formData.quantity}
+                      onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
+                      required
+                      min="1"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Left Item</label>
+                    <input
+                      type="number"
+                      value={formData.left_item}
+                      onChange={(e) => setFormData({ ...formData, left_item: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
+                      min="0"
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Price (BDT)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={formData.price}
+                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Unit Cost (BDT)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={formData.unit_cost}
+                      onChange={(e) => setFormData({ ...formData, unit_cost: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Purchase Date *</label>
+                    <input
+                      type="date"
+                      value={formData.purchase_date}
+                      onChange={(e) => setFormData({ ...formData, purchase_date: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Receipt</label>
+                    <select
+                      value={formData.receipt.toString()}
+                      onChange={(e) => setFormData({ ...formData, receipt: e.target.value === 'true' })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
+                    >
+                      <option value="false">No</option>
+                      <option value="true">Yes</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Paid By</label>
+                  <input
+                    type="text"
+                    value={formData.paid_by}
+                    onChange={(e) => setFormData({ ...formData, paid_by: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Remark</label>
+                  <textarea
+                    value={formData.remark}
+                    onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
+                    rows={3}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Photo</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoUpload}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
+                  />
+                  {formData.photo_data && (
+                    <img src={formData.photo_data} alt="Preview" className="mt-2 w-32 h-32 object-cover rounded-lg" />
+                  )}
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-4 mt-6">
+                <button
+                  onClick={() => { setShowAddModal(false); resetForm(); }}
+                  className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-900 font-medium rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveItem}
+                  disabled={saving}
+                  className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {saving ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Category Modal */}
+        {showCategoryModal && (
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Add Category</h2>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Category Name *</label>
+                <input
+                  type="text"
+                  value={categoryName}
+                  onChange={(e) => setCategoryName(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
+                  required
+                />
+              </div>
+              
+              <div className="flex justify-end gap-4 mt-6">
+                <button
+                  onClick={() => { setShowCategoryModal(false); setCategoryName(''); }}
+                  className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-900 font-medium rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddCategory}
+                  disabled={saving}
+                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {saving ? 'Adding...' : 'Add Category'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Column Selection Modal */}
+        {showColumnModal && (
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Select Columns</h2>
+              
+              <div className="space-y-2">
+                {Object.entries(COLUMN_LABELS).map(([key, label]) => (
+                  <label key={key} className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={selectedColumns.includes(key)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedColumns([...selectedColumns, key]);
+                        } else {
+                          setSelectedColumns(selectedColumns.filter(c => c !== key));
+                        }
+                      }}
+                      className="rounded text-yellow-500 focus:ring-yellow-500"
+                    />
+                    <span className="text-sm text-gray-700">{label}</span>
+                  </label>
+                ))}
+              </div>
+              
+              <div className="flex justify-between mt-6">
+                <button
+                  onClick={() => setSelectedColumns(DEFAULT_COLUMNS)}
+                  className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-900 font-medium rounded-lg transition-colors"
+                >
+                  Reset
+                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowColumnModal(false)}
+                    className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-900 font-medium rounded-lg transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => setShowColumnModal(false)}
+                    className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white font-medium rounded-lg transition-colors"
+                  >
+                    Apply
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </AppLayout>
   );
