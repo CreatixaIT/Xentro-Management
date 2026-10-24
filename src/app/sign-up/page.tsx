@@ -133,8 +133,8 @@ export default function SignUpPage() {
         return;
       }
 
-      // Success - redirect to verify email page
-      router.push('/verify-email');
+      // Success - redirect to sign-in with pending approval message
+      router.push('/sign-in?registered=true');
     } catch (error) {
       setSubmitError('An unexpected error occurred');
       setIsSubmitting(false);

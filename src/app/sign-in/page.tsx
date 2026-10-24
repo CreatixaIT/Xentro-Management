@@ -8,6 +8,7 @@ function SignInContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const verified = searchParams.get('verified') === '1';
+  const registered = searchParams.get('registered') === 'true';
 
   const [formData, setFormData] = useState({
     username: '',
@@ -96,6 +97,12 @@ function SignInContent() {
           {verified && (
             <div className="mb-4 bg-green-500/20 border border-green-500 text-green-200 px-4 py-2 rounded-lg text-sm">
               Email verified successfully! You can now sign in.
+            </div>
+          )}
+
+          {registered && (
+            <div className="mb-4 bg-green-500/20 border border-green-500 text-green-200 px-4 py-2 rounded-lg text-sm">
+              Registration submitted successfully. Your account is awaiting Super Admin approval.
             </div>
           )}
 

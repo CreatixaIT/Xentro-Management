@@ -6,10 +6,7 @@
  * It reads credentials from environment variables to avoid hardcoding secrets.
  *
  * Usage:
- *   SUPERADMIN_USERNAME=superadmin \
- *   SUPERADMIN_PASSCODE=924040 \
- *   SUPERADMIN_EMAIL=xentrobd@gmail.com \
- *   tsx scripts/bootstrap-superadmin.ts
+ *   SUPERADMIN_PASSCODE=924040 npm run bootstrap:admin
  *
  * Environment Variables:
  *   SUPERADMIN_USERNAME - Username for the super admin (default: superadmin)
@@ -24,9 +21,27 @@
  *   SUPERADMIN_ADDRESS - Address (default: Khulshi, Chittagong)
  */
 
+import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
 import { encryptNID } from '../src/lib/encryption';
 import { randomUUID } from 'crypto';
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
+
+// Load .env.local explicitly
+const envPath = resolve(__dirname, '../.env.local');
+try {
+  const envContent = readFileSync(envPath, 'utf-8');
+  envContent.split('\n').forEach(line => {
+    const match = line.match(/^([^=#]+)=(.*)$/);
+    if (match) {
+      const [, key, value] = match;
+      process.env[key.trim()] = value.trim();
+    }
+  });
+} catch (e) {
+  // File might not exist, that's okay
+}
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY;
