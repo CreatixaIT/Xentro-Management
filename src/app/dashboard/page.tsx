@@ -100,13 +100,13 @@ export default async function DashboardPage() {
     <AppLayout profile={profile}>
       <div className="space-y-6 pb-20 md:pb-0">
         {/* Header */}
-        <div className="bg-white rounded-2xl shadow-sm p-6">
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/30 p-6">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
                 Welcome back, {profile?.full_name || 'User'}!
               </h1>
-              <p className="text-gray-500 mt-1">{currentDate}</p>
+              <p className="text-gray-600 mt-1">{currentDate}</p>
             </div>
             <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-500 flex items-center justify-center">
               <span className="text-2xl md:text-3xl">👤</span>
@@ -116,26 +116,26 @@ export default async function DashboardPage() {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-xl shadow-sm p-4">
-            <p className="text-gray-500 text-sm">Attendance</p>
+          <div className="bg-white/80 backdrop-blur-xl rounded-xl shadow-md border border-white/30 p-4">
+            <p className="text-gray-600 text-sm">Attendance</p>
             <p className="text-2xl font-bold text-gray-900 mt-1">
               {attendance?.status === 'PRESENT' ? '✓ Present' : attendance?.status || '—'}
             </p>
           </div>
-          <div className="bg-white rounded-xl shadow-sm p-4">
-            <p className="text-gray-500 text-sm">Hours Today</p>
+          <div className="bg-white/80 backdrop-blur-xl rounded-xl shadow-md border border-white/30 p-4">
+            <p className="text-gray-600 text-sm">Hours Today</p>
             <p className="text-2xl font-bold text-gray-900 mt-1">
               {attendance?.work_duration_minutes
                 ? `${Math.floor(attendance.work_duration_minutes / 60)}h ${attendance.work_duration_minutes % 60}m`
                 : '—'}
             </p>
           </div>
-          <div className="bg-white rounded-xl shadow-sm p-4">
-            <p className="text-gray-500 text-sm">Active Projects</p>
+          <div className="bg-white/80 backdrop-blur-xl rounded-xl shadow-md border border-white/30 p-4">
+            <p className="text-gray-600 text-sm">Active Projects</p>
             <p className="text-2xl font-bold text-gray-900 mt-1">{activeProjectsCount || 0}</p>
           </div>
-          <div className="bg-white rounded-xl shadow-sm p-4">
-            <p className="text-gray-500 text-sm">Pending Tasks</p>
+          <div className="bg-white/80 backdrop-blur-xl rounded-xl shadow-md border border-white/30 p-4">
+            <p className="text-gray-600 text-sm">Pending Tasks</p>
             <p className="text-2xl font-bold text-gray-900 mt-1">{pendingTasksCount || 0}</p>
           </div>
         </div>
@@ -146,16 +146,16 @@ export default async function DashboardPage() {
             <a
               key={card.name}
               href={card.href}
-              className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow p-6 block"
+              className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-md hover:shadow-lg border border-white/30 transition-shadow p-6 block"
             >
               <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${card.color} flex items-center justify-center mb-4`}>
                 <span className="text-2xl">{card.icon}</span>
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-1">{card.name}</h3>
-              <p className="text-gray-500 text-sm mb-3">{card.description}</p>
+              <p className="text-gray-600 text-sm mb-3">{card.description}</p>
               {card.count !== undefined && (
                 <p className="text-2xl font-bold text-gray-900">
-                  {card.count} <span className="text-sm font-normal text-gray-500">{card.countLabel}</span>
+                  {card.count} <span className="text-sm font-normal text-gray-600">{card.countLabel}</span>
                 </p>
               )}
               {card.status && (
@@ -166,19 +166,19 @@ export default async function DashboardPage() {
         </div>
 
         {/* Recent Activity Panel */}
-        <div className="bg-white rounded-2xl shadow-sm p-6">
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-md border border-white/30 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Stats</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-gray-50 rounded-xl p-4">
-              <p className="text-gray-500 text-sm">Total Inventory</p>
+            <div className="bg-white/50 rounded-xl p-4">
+              <p className="text-gray-600 text-sm">Total Inventory</p>
               <p className="text-xl font-bold text-gray-900 mt-1">{inventoryCount || 0} items</p>
             </div>
-            <div className="bg-gray-50 rounded-xl p-4">
-              <p className="text-gray-500 text-sm">Designation</p>
+            <div className="bg-white/50 rounded-xl p-4">
+              <p className="text-gray-600 text-sm">Designation</p>
               <p className="text-xl font-bold text-gray-900 mt-1">{profile?.designation || '—'}</p>
             </div>
-            <div className="bg-gray-50 rounded-xl p-4">
-              <p className="text-gray-500 text-sm">Account Status</p>
+            <div className="bg-white/50 rounded-xl p-4">
+              <p className="text-gray-600 text-sm">Account Status</p>
               <p className="text-xl font-bold text-gray-900 mt-1 capitalize">{profile?.status?.toLowerCase() || '—'}</p>
             </div>
           </div>

@@ -31,16 +31,16 @@ export default async function AttendancePage() {
   return (
     <AppLayout profile={profile}>
       <div className="space-y-6 pb-20 md:pb-0">
-        <div className="bg-white rounded-2xl shadow-sm p-6">
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-md border border-white/30 p-6">
           <h1 className="text-2xl font-bold text-gray-900">Attendance</h1>
-          <p className="text-gray-500 mt-1">Track your working hours</p>
+          <p className="text-gray-600 mt-1">Track your working hours</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm p-6">
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-md border border-white/30 p-6">
           {attendance && attendance.length > 0 ? (
             <div className="space-y-4">
               {attendance.map((record) => (
-                <div key={record.id} className="border-b pb-4 last:border-0">
+                <div key={record.id} className="border-b border-white/30 pb-4 last:border-0">
                   <div className="flex items-start justify-between">
                     <div>
                       <h3 className="font-semibold text-gray-900">
@@ -52,25 +52,25 @@ export default async function AttendancePage() {
                         })}
                       </h3>
                       <div className="flex gap-4 mt-2 text-sm">
-                        <span className="text-gray-600">
+                        <span className="text-gray-700">
                           Time In: {record.time_in ? new Date(record.time_in).toLocaleTimeString() : '—'}
                         </span>
-                        <span className="text-gray-600">
+                        <span className="text-gray-700">
                           Time Out: {record.time_out ? new Date(record.time_out).toLocaleTimeString() : '—'}
                         </span>
                       </div>
                       {record.work_duration_minutes && (
-                        <p className="text-sm text-gray-600 mt-1">
+                        <p className="text-sm text-gray-700 mt-1">
                           Duration: {Math.floor(record.work_duration_minutes / 60)}h {record.work_duration_minutes % 60}m
                         </p>
                       )}
                     </div>
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      record.status === 'PRESENT' ? 'bg-green-100 text-green-700' :
-                      record.status === 'LATE' ? 'bg-yellow-100 text-yellow-700' :
-                      record.status === 'HALF_DAY' ? 'bg-orange-100 text-orange-700' :
-                      record.status === 'ON_LEAVE' ? 'bg-blue-100 text-blue-700' :
-                      'bg-gray-100 text-gray-700'
+                      record.status === 'PRESENT' ? 'bg-green-100/80 text-green-700' :
+                      record.status === 'LATE' ? 'bg-yellow-100/80 text-yellow-700' :
+                      record.status === 'HALF_DAY' ? 'bg-orange-100/80 text-orange-700' :
+                      record.status === 'ON_LEAVE' ? 'bg-blue-100/80 text-blue-700' :
+                      'bg-gray-100/80 text-gray-700'
                     }`}>
                       {record.status}
                     </span>
@@ -81,7 +81,7 @@ export default async function AttendancePage() {
           ) : (
             <div className="text-center py-12">
               <span className="text-4xl">⏰</span>
-              <p className="text-gray-500 mt-4">No attendance records found</p>
+              <p className="text-gray-600 mt-4">No attendance records found</p>
             </div>
           )}
         </div>

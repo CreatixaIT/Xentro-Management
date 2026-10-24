@@ -20,13 +20,13 @@ export default async function SettingsPage() {
   return (
     <AppLayout profile={profile}>
       <div className="space-y-6 pb-20 md:pb-0">
-        <div className="bg-white rounded-2xl shadow-sm p-6">
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-md border border-white/30 p-6">
           <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-          <p className="text-gray-500 mt-1">Manage your profile and preferences</p>
+          <p className="text-gray-600 mt-1">Manage your profile and preferences</p>
         </div>
 
         {/* Profile Card */}
-        <div className="bg-white rounded-2xl shadow-sm p-6">
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-md border border-white/30 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Profile Information</h2>
           
           <div className="flex items-center mb-6">
@@ -35,7 +35,7 @@ export default async function SettingsPage() {
             </div>
             <div className="ml-4">
               <h3 className="text-xl font-semibold text-gray-900">{profile?.full_name || 'User'}</h3>
-              <p className="text-gray-500">@{profile?.username || 'username'}</p>
+              <p className="text-gray-600">@{profile?.username || 'username'}</p>
             </div>
           </div>
 
@@ -80,7 +80,7 @@ export default async function SettingsPage() {
         </div>
 
         {/* Account Status */}
-        <div className="bg-white rounded-2xl shadow-sm p-6">
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-md border border-white/30 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Account Status</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -101,7 +101,7 @@ export default async function SettingsPage() {
         </div>
 
         {/* Sign Out */}
-        <div className="bg-white rounded-2xl shadow-sm p-6">
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-md border border-white/30 p-6">
           <form action="/auth/sign-out" method="post">
             <button
               type="submit"
