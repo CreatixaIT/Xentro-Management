@@ -79,11 +79,16 @@ export async function PATCH(
     .from('inventory')
     .update(updateData)
     .eq('id', id)
-    .select()
+    .select('*')
     .single();
 
   if (error) {
+    console.error('Inventory update error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  if (!item) {
+    return NextResponse.json({ error: 'Item not found' }, { status: 404 });
   }
 
   return NextResponse.json({ item });

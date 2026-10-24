@@ -38,11 +38,12 @@ const MONTHS = [
 ];
 
 const DEFAULT_COLUMNS = [
-  'name', 'category', 'size', 'quantity', 'left_item', 'price', 'unit_cost', 
+  'photo', 'name', 'category', 'size', 'quantity', 'left_item', 'price', 'unit_cost', 
   'purchase_date', 'receipt', 'paid_by', 'user_entry', 'remark'
 ];
 
 const COLUMN_LABELS: Record<string, string> = {
+  photo: 'Photo',
   name: 'Item Name',
   category: 'Category',
   size: 'Size',
@@ -66,6 +67,9 @@ export default function InventoryPage() {
   const [showColumnModal, setShowColumnModal] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [selectedColumns, setSelectedColumns] = useState<string[]>(DEFAULT_COLUMNS);
+  const [photoViewerOpen, setPhotoViewerOpen] = useState(false);
+  const [currentPhotoUrl, setCurrentPhotoUrl] = useState<string | null>(null);
+  const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
   
   // Filters
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth());
@@ -130,6 +134,22 @@ export default function InventoryPage() {
 
     if (response.ok && result.inventory) {
       setInventory(result.inventory);
+      
+      // Fetch signed URLs for photos
+      const photoPromises = result.inventory
+        .filter((item: InventoryItem) => item.photo_path)
+        .map(async (item: InventoryItem) => {
+          const photoResponse = await fetch(`/api/inventory/photo-url?path=${encodeURIComponent(item.photo_path!)}`);
+          const photoResult = await photoResponse.json();
+          return { id: item.id, url: photoResult.url };
+        });
+      
+      const photoResults = await Promise.all(photoPromises);
+      const urlMap: Record<string, string> = {};
+      photoResults.forEach(({ id, url }) => {
+        urlMap[id] = url;
+      });
+      setPhotoUrls(urlMap);
     } else {
       setInventory([]);
     }
@@ -284,6 +304,36 @@ export default function InventoryPage() {
     }
   };
 
+  const openPhotoViewer = async (photoPath: string) => {
+    if (!photoPath) return;
+    
+    const response = await fetch(`/api/inventory/photo-url?path=${encodeURIComponent(photoPath)}`);
+    const result = await response.json();
+    
+    if (response.ok && result.url) {
+      setCurrentPhotoUrl(result.url);
+      setPhotoViewerOpen(true);
+    } else {
+      alert('Failed to load photo');
+    }
+  };
+
+  const closePhotoViewer = () => {
+    setPhotoViewerOpen(false);
+    setCurrentPhotoUrl(null);
+  };
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && photoViewerOpen) {
+        closePhotoViewer();
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [photoViewerOpen]);
+
   const generatePDF = () => {
     if (selectedColumns.length === 0) {
       alert('Please select at least one column to generate the report');
@@ -326,6 +376,8 @@ export default function InventoryPage() {
     const rows = inventory.map(item => 
       selectedColumns.map(col => {
         switch (col) {
+          case 'photo':
+            return item.photo_path ? 'Yes' : '—';
           case 'category':
             return item.inventory_categories?.name || '—';
           case 'user_entry':
@@ -535,12 +587,30 @@ export default function InventoryPage() {
                     <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50">
                       {selectedColumns.map(col => (
                         <td key={col} className="px-4 py-3 text-sm text-gray-700">
+                          {col === 'photo' && item.photo_path && (
+                            <button
+                              onClick={() => item.photo_path && openPhotoViewer(item.photo_path)}
+                              className="cursor-pointer"
+                            >
+                              <img
+                                src={photoUrls[item.id] || ''}
+                                alt="Product"
+                                className="w-12 h-12 object-cover rounded-lg"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display = 'none';
+                                }}
+                              />
+                            </button>
+                          )}
+                          {col === 'photo' && !item.photo_path && (
+                            <span className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">—</span>
+                          )}
                           {col === 'category' && item.inventory_categories?.name}
                           {col === 'user_entry' && item.creator?.username}
                           {col === 'receipt' && (item.receipt ? 'Yes' : 'No')}
                           {col === 'price' && `BDT ${item.price.toFixed(2)}`}
                           {col === 'unit_cost' && `BDT ${item.unit_cost.toFixed(2)}`}
-                          {col !== 'category' && col !== 'user_entry' && col !== 'receipt' && col !== 'price' && col !== 'unit_cost' && item[col as keyof InventoryItem]?.toString()}
+                          {col !== 'photo' && col !== 'category' && col !== 'user_entry' && col !== 'receipt' && col !== 'price' && col !== 'unit_cost' && item[col as keyof InventoryItem]?.toString()}
                         </td>
                       ))}
                       <td className="px-4 py-3 text-right">
@@ -818,6 +888,34 @@ export default function InventoryPage() {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Photo Viewer Modal */}
+        {photoViewerOpen && (
+          <div 
+            className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4"
+            onClick={closePhotoViewer}
+          >
+            <div 
+              className="relative max-w-4xl max-h-[90vh] p-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={closePhotoViewer}
+                className="absolute top-2 right-2 w-10 h-10 bg-white rounded-full flex items-center justify-center text-gray-900 text-xl font-bold hover:bg-gray-200 transition-colors"
+                aria-label="Close photo viewer"
+              >
+                ×
+              </button>
+              {currentPhotoUrl && (
+                <img
+                  src={currentPhotoUrl}
+                  alt="Product photo"
+                  className="max-w-full max-h-[85vh] object-contain rounded-lg"
+                />
+              )}
             </div>
           </div>
         )}
