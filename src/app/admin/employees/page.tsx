@@ -83,7 +83,13 @@ export default function AdminEmployees() {
       const response = await fetch(`/api/admin/employee-details?id=${employee.id}`);
       if (!response.ok) throw new Error('Failed to fetch details');
       const data = await response.json();
-      setSelectedEmployee(data);
+      // The API returns { employee, photoUrl, resetRequests }
+      // Merge them into a single object for the modal
+      setSelectedEmployee({
+        ...data.employee,
+        photoUrl: data.photoUrl,
+        resetRequests: data.resetRequests,
+      });
     } catch (err) {
       console.error(err);
     } finally {
@@ -94,6 +100,24 @@ export default function AdminEmployees() {
   const closeDetailsModal = () => {
     setShowDetailsModal(false);
     setSelectedEmployee(null);
+  };
+
+  // Safe date formatting helper
+  const formatDate = (dateValue: string | null | undefined): string => {
+    if (!dateValue) return '—';
+    try {
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) return '—';
+      return date.toLocaleString();
+    } catch {
+      return '—';
+    }
+  };
+
+  // Safe text display helper
+  const displayValue = (value: string | number | null | undefined): string => {
+    if (value === null || value === undefined || value === '') return '—';
+    return String(value);
   };
 
   if (loading) return <div className="min-h-screen bg-gray-900 text-white p-8">Loading...</div>;
@@ -253,39 +277,39 @@ export default function AdminEmployees() {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <span className="text-gray-400">Full Name:</span>
-                      <p className="font-medium">{selectedEmployee.full_name}</p>
+                      <p className="font-medium">{displayValue(selectedEmployee.full_name)}</p>
                     </div>
                     <div>
                       <span className="text-gray-400">Username:</span>
-                      <p className="font-medium">{selectedEmployee.username}</p>
+                      <p className="font-medium">{displayValue(selectedEmployee.username)}</p>
                     </div>
                     <div>
                       <span className="text-gray-400">Email:</span>
-                      <p className="font-medium">{selectedEmployee.email}</p>
+                      <p className="font-medium">{displayValue(selectedEmployee.email)}</p>
                     </div>
                     <div>
                       <span className="text-gray-400">Phone:</span>
-                      <p className="font-medium">{selectedEmployee.contact_number}</p>
+                      <p className="font-medium">{displayValue(selectedEmployee.contact_number)}</p>
                     </div>
                     <div>
                       <span className="text-gray-400">Emergency Contact:</span>
-                      <p className="font-medium">{selectedEmployee.emergency_contact_number}</p>
+                      <p className="font-medium">{displayValue(selectedEmployee.emergency_contact_number)}</p>
                     </div>
                     <div>
                       <span className="text-gray-400">Age:</span>
-                      <p className="font-medium">{selectedEmployee.age}</p>
+                      <p className="font-medium">{displayValue(selectedEmployee.age)}</p>
                     </div>
                     <div>
                       <span className="text-gray-400">Blood Group:</span>
-                      <p className="font-medium">{selectedEmployee.blood_group}</p>
+                      <p className="font-medium">{displayValue(selectedEmployee.blood_group)}</p>
                     </div>
                     <div>
                       <span className="text-gray-400">Designation:</span>
-                      <p className="font-medium">{selectedEmployee.designation}</p>
+                      <p className="font-medium">{displayValue(selectedEmployee.designation)}</p>
                     </div>
                     <div className="col-span-2">
                       <span className="text-gray-400">Address:</span>
-                      <p className="font-medium">{selectedEmployee.address}</p>
+                      <p className="font-medium">{displayValue(selectedEmployee.address)}</p>
                     </div>
                   </div>
                 </div>
@@ -308,11 +332,11 @@ export default function AdminEmployees() {
                     </div>
                     <div>
                       <span className="text-gray-400">Created:</span>
-                      <p className="font-medium">{new Date(selectedEmployee.created_at).toLocaleString()}</p>
+                      <p className="font-medium">{formatDate(selectedEmployee.created_at)}</p>
                     </div>
                     <div>
                       <span className="text-gray-400">Last Updated:</span>
-                      <p className="font-medium">{new Date(selectedEmployee.updated_at).toLocaleString()}</p>
+                      <p className="font-medium">{formatDate(selectedEmployee.updated_at)}</p>
                     </div>
                   </div>
                 </div>
@@ -324,10 +348,10 @@ export default function AdminEmployees() {
                     <div className="space-y-2">
                       {selectedEmployee.resetRequests.map((req, idx) => (
                         <div key={idx} className="text-sm border-l-2 border-gray-600 pl-3">
-                          <p className="text-gray-400">Requested: {new Date(req.requested_at).toLocaleString()}</p>
+                          <p className="text-gray-400">Requested: {formatDate(req.requested_at)}</p>
                           <p className="text-gray-400">Status: {req.status}</p>
                           {req.resolved_at && (
-                            <p className="text-gray-400">Resolved: {new Date(req.resolved_at).toLocaleString()}</p>
+                            <p className="text-gray-400">Resolved: {formatDate(req.resolved_at)}</p>
                           )}
                         </div>
                       ))}

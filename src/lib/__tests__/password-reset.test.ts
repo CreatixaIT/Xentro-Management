@@ -104,3 +104,76 @@ describe('Password Reset Request Constraints', () => {
     });
   });
 });
+
+describe('Date Formatting Helper', () => {
+  describe('formatDate function', () => {
+    const formatDate = (dateValue: string | null | undefined): string => {
+      if (!dateValue) return '—';
+      try {
+        const date = new Date(dateValue);
+        if (isNaN(date.getTime())) return '—';
+        return date.toLocaleString();
+      } catch {
+        return '—';
+      }
+    };
+
+    it('should format valid ISO timestamps', () => {
+      const validDate = '2024-01-15T10:30:00Z';
+      const result = formatDate(validDate);
+      expect(result).not.toBe('—');
+      expect(result).toContain('2024');
+    });
+
+    it('should return — for null values', () => {
+      expect(formatDate(null)).toBe('—');
+    });
+
+    it('should return — for undefined values', () => {
+      expect(formatDate(undefined)).toBe('—');
+    });
+
+    it('should return — for empty strings', () => {
+      expect(formatDate('')).toBe('—');
+    });
+
+    it('should return — for invalid dates', () => {
+      expect(formatDate('invalid-date')).toBe('—');
+    });
+
+    it('should return — for malformed timestamps', () => {
+      expect(formatDate('not-a-date')).toBe('—');
+    });
+  });
+
+  describe('displayValue function', () => {
+    const displayValue = (value: string | number | null | undefined): string => {
+      if (value === null || value === undefined || value === '') return '—';
+      return String(value);
+    };
+
+    it('should return string values', () => {
+      expect(displayValue('John Doe')).toBe('John Doe');
+    });
+
+    it('should convert numbers to strings', () => {
+      expect(displayValue(30)).toBe('30');
+    });
+
+    it('should return — for null', () => {
+      expect(displayValue(null)).toBe('—');
+    });
+
+    it('should return — for undefined', () => {
+      expect(displayValue(undefined)).toBe('—');
+    });
+
+    it('should return — for empty strings', () => {
+      expect(displayValue('')).toBe('—');
+    });
+
+    it('should return — for zero (optional field)', () => {
+      expect(displayValue(0)).toBe('0');
+    });
+  });
+});
