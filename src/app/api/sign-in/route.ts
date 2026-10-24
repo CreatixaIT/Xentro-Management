@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     const serviceRoleClient = createServiceRoleClient();
     const { data: profile, error: profileError } = await serviceRoleClient
       .from('profiles')
-      .select('email, status')
+      .select('email, status, role')
       .eq('username_normalized', normalizedUsername)
       .maybeSingle();
 
@@ -68,15 +68,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if email is confirmed
-    if (!authData.user.email_confirmed_at) {
-      await supabase.auth.signOut();
-      return NextResponse.json(
-        { message: 'Please verify your email before signing in' },
-        { status: 403 }
-      );
-    }
-
+    // Email verification is temporarily disabled
     // Check account status
     if (profile.status === 'PENDING') {
       await supabase.auth.signOut();
@@ -98,12 +90,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Account is ACTIVE - redirect to protected area
+    // Account is ACTIVE - redirect to appropriate dashboard
+    const redirectUrl = profile.role === 'SUPER_ADMIN' ? '/admin' : '/dashboard';
     return NextResponse.json(
       {
         success: true,
         message: 'Sign in successful',
-        redirectUrl: '/dashboard',
+        redirectUrl,
       },
       {
         status: 200,

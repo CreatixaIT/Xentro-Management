@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test": "vitest"
+    "test": "vitest",
+    "bootstrap:admin": "tsx scripts/bootstrap-superadmin.ts"
   },
   "keywords": [],
   "author": "",
@@ -32,6 +33,7 @@
     "eslint-config-next": "^16.4.2",
     "postcss": "^8.5.31",
     "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.15",
     "typescript": "^6.0.3",
     "vitest": "^5.0.5"
   }

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
-import { createClient } from '@supabase/supabase-js';
 import { encryptNID } from '@/lib/encryption';
 import {
   usernameSchema,
@@ -47,14 +46,6 @@ export async function POST(request: NextRequest) {
 
     if (!process.env.NID_ENCRYPTION_KEY) {
       console.error('[Signup] Missing NID_ENCRYPTION_KEY');
-      return NextResponse.json(
-        { message: 'Server configuration error. Please contact support.' },
-        { status: 500 }
-      );
-    }
-
-    if (!process.env.NEXT_PUBLIC_APP_URL) {
-      console.error('[Signup] Missing NEXT_PUBLIC_APP_URL');
       return NextResponse.json(
         { message: 'Server configuration error. Please contact support.' },
         { status: 500 }
@@ -217,25 +208,15 @@ export async function POST(request: NextRequest) {
     const encryptionKey = process.env.NID_ENCRYPTION_KEY!;
     const { ciphertext: nidCiphertext, iv: nidIv, authTag: nidAuthTag } = encryptNID(nid, encryptionKey);
 
-    // Create Supabase Auth user using regular signup (not admin API)
-    // This sends the confirmation email automatically
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
-    const publicClient = createClient(supabaseUrl, supabaseKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    });
-
-    const { data: authData, error: authError } = await publicClient.auth.signUp({
+    // Create Supabase Auth user using admin API (bypasses email verification)
+    // Email verification is temporarily disabled due to SMTP configuration issues
+    // New accounts remain PENDING until Super Admin approval
+    const { data: authData, error: authError } = await serviceRoleClient.auth.admin.createUser({
       email: normalizedEmail,
       password,
-      options: {
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
-        data: {
-          username: normalizedUsername,
-        },
+      email_confirm: true, // Mark as confirmed without sending email
+      user_metadata: {
+        username: normalizedUsername,
       },
     });
 
@@ -303,7 +284,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: true,
-          message: 'Account created successfully. Please check your email to verify.',
+          message: 'Registration submitted successfully. Your account is awaiting Super Admin approval.',
         },
         {
           status: 201,

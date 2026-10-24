@@ -12,7 +12,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Protect dashboard and other protected routes
+  // Protect dashboard, admin, and other protected routes
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -24,5 +24,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/protected/:path*'],
+  matcher: ['/dashboard/:path*', '/admin/:path*', '/protected/:path*'],
 };
