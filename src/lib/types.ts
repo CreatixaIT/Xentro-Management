@@ -1,0 +1,8 @@
+export const PASSWORD_RESET_STATUSES = {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  COMPLETED: 'COMPLETED',
+  REJECTED: 'REJECTED',
+} as const;
+
+export type PasswordResetStatus = typeof PASSWORD_RESET_STATUSES[keyof typeof PASSWORD_RESET_STATUSES];

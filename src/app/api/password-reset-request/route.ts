@@ -82,21 +82,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if there's already a pending request
+    // Check if there's already a pending or approved request
     const { data: existingRequest } = await serviceRoleClient
       .from('password_reset_requests')
       .select('id, status')
       .eq('profile_id', profile.id)
-      .eq('status', 'PENDING')
+      .in('status', ['PENDING', 'APPROVED'])
       .maybeSingle();
 
     if (existingRequest) {
-      console.log(`[PasswordResetRequest][${correlationId}] Pending request already exists for profile: ${profile.id}`);
+      console.log(`[PasswordResetRequest][${correlationId}] Unresolved request already exists for profile: ${profile.id}, status: ${existingRequest.status}`);
       return NextResponse.json(
         {
-          message: 'If an account matches these details, a password reset request will be reviewed by an administrator.',
+          message: 'You already have a password reset request awaiting administrator action. Please wait until the administrator resets your password.',
         },
-        { status: 200 }
+        { status: 400 }
       );
     }
 
