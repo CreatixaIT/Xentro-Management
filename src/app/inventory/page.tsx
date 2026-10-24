@@ -30,7 +30,6 @@ interface InventoryItem {
   updated_by: string | null;
   inventory_categories: Category | null;
   creator: { username: string; full_name: string } | null;
-  updater: { username: string; full_name: string } | null;
 }
 
 const MONTHS = [
@@ -56,7 +55,6 @@ const COLUMN_LABELS: Record<string, string> = {
   paid_by: 'Paid By',
   user_entry: 'User Entry',
   remark: 'Remark',
-  created_at: 'Entry Date',
 };
 
 export default function InventoryPage() {
@@ -287,6 +285,11 @@ export default function InventoryPage() {
   };
 
   const generatePDF = () => {
+    if (selectedColumns.length === 0) {
+      alert('Please select at least one column to generate the report');
+      return;
+    }
+
     const doc = new jsPDF('l', 'mm', 'a4');
     
     // Title
@@ -318,7 +321,7 @@ export default function InventoryPage() {
     doc.text(`Total Remaining: ${totalLeft}`, 14, 47);
     doc.text(`Total Value: BDT ${totalValue.toFixed(2)}`, 14, 52);
     
-    // Table
+    // Table - only selected columns
     const headers = selectedColumns.map(col => COLUMN_LABELS[col]);
     const rows = inventory.map(item => 
       selectedColumns.map(col => {

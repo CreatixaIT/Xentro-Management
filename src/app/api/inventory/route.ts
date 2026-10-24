@@ -27,14 +27,6 @@ export async function GET(request: Request) {
       inventory_categories (
         id,
         name
-      ),
-      creator:profiles!inventory_created_by_fkey (
-        username,
-        full_name
-      ),
-      updater:profiles!inventory_updated_by_fkey (
-        username,
-        full_name
       )
     `);
 
@@ -90,7 +82,30 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ inventory });
+  // Fetch creator usernames
+  const creatorIds = inventory.map(item => item.created_by).filter(Boolean);
+  const creatorMap = new Map<string, { username: string; full_name: string }>();
+  
+  if (creatorIds.length > 0) {
+    const { data: creators } = await supabase
+      .from('profiles')
+      .select('id, username, full_name')
+      .in('id', creatorIds);
+    
+    if (creators) {
+      creators.forEach(creator => {
+        creatorMap.set(creator.id, { username: creator.username, full_name: creator.full_name });
+      });
+    }
+  }
+
+  // Attach creator info to inventory items
+  const inventoryWithCreators = inventory.map(item => ({
+    ...item,
+    creator: item.created_by ? creatorMap.get(item.created_by) || null : null,
+  }));
+
+  return NextResponse.json({ inventory: inventoryWithCreators });
 }
 
 export async function POST(request: Request) {
