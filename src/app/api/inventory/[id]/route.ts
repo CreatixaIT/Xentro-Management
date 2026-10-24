@@ -87,30 +87,13 @@ export async function PATCH(
 
   console.log('Update data keys:', Object.keys(updateData));
 
-  // First check if the item exists
-  const { data: existingItem, error: checkError } = await supabase
-    .from('inventory')
-    .select('id')
-    .eq('id', id)
-    .maybeSingle();
-
-  if (checkError) {
-    console.error('Inventory check error:', checkError);
-    return NextResponse.json({ error: `Check failed: ${checkError.message}` }, { status: 500 });
-  }
-
-  if (!existingItem) {
-    console.log('Item not found:', id);
-    return NextResponse.json({ error: 'Item not found' }, { status: 404 });
-  }
-
-  // Perform the update
+  // Perform the update directly - if it fails, we'll get a clear error
   const { data: item, error } = await supabase
     .from('inventory')
     .update(updateData)
     .eq('id', id)
     .select('*')
-    .maybeSingle();
+    .single();
 
   if (error) {
     console.error('Inventory update error:', error);
@@ -118,16 +101,20 @@ export async function PATCH(
     console.error('Error message:', error.message);
     console.error('Error details:', error.details);
     console.error('Error hint:', error.hint);
+    
+    // If the error is about coercing to single JSON object, it means zero rows were updated
+    if (error.message.includes('Cannot coerce the result to a single JSON object')) {
+      return NextResponse.json({ 
+        error: 'Item not found or update not permitted',
+        code: error.code,
+      }, { status: 404 });
+    }
+    
     return NextResponse.json({ 
       error: `Update failed: ${error.message}`,
       code: error.code,
       details: error.details,
     }, { status: 500 });
-  }
-
-  if (!item) {
-    console.error('Update returned null for item:', id);
-    return NextResponse.json({ error: 'Update returned no data' }, { status: 500 });
   }
 
   console.log('Update successful for item:', id);
