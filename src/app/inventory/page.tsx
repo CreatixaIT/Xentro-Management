@@ -628,7 +628,11 @@ export default function InventoryPage() {
                                   alt="Product"
                                   className="w-12 h-12 object-cover rounded-lg"
                                   onError={(e) => {
+                                    console.error('Failed to load thumbnail for item:', item.id, 'src:', photoUrls[item.id]);
                                     (e.target as HTMLImageElement).style.display = 'none';
+                                  }}
+                                  onLoad={() => {
+                                    console.log('Thumbnail loaded successfully for item:', item.id);
                                   }}
                                 />
                               ) : (

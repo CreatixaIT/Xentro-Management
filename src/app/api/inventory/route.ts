@@ -155,13 +155,38 @@ export async function POST(request: Request) {
 
   // Handle photo upload if provided
   if (photo_data) {
-    const fileName = `${user.id}/${Date.now()}.jpg`;
-    console.log('POST: Uploading photo to:', fileName);
+    // Validate and extract base64 payload from data URL
+    if (!photo_data.startsWith('data:')) {
+      return NextResponse.json({ error: 'Invalid photo data format' }, { status: 400 });
+    }
+
+    // Extract MIME type and base64 payload
+    const matches = photo_data.match(/^data:([^;]+);base64,(.+)$/);
+    if (!matches) {
+      return NextResponse.json({ error: 'Invalid data URL format' }, { status: 400 });
+    }
+
+    const mimeType = matches[1];
+    const base64Payload = matches[2];
+
+    // Validate supported MIME types
+    const supportedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!supportedTypes.includes(mimeType)) {
+      return NextResponse.json({ error: `Unsupported image type: ${mimeType}` }, { status: 400 });
+    }
+
+    // Determine file extension from MIME type
+    const extension = mimeType === 'image/png' ? 'png' : 
+                     mimeType === 'image/webp' ? 'webp' : 'jpg';
+    
+    const fileName = `${user.id}/${Date.now()}.${extension}`;
+    console.log('POST: Uploading photo to:', fileName, 'Type:', mimeType);
+    
     const { data: uploadData, error: uploadError } = await supabase
       .storage
       .from('inventory-photos')
-      .upload(fileName, Buffer.from(photo_data, 'base64'), {
-        contentType: 'image/jpeg',
+      .upload(fileName, Buffer.from(base64Payload, 'base64'), {
+        contentType: mimeType,
         upsert: true,
       });
 
