@@ -23,6 +23,8 @@ interface LeaveRequest {
   status: string;
   created_at: string;
   updated_at: string;
+  admin_remarks?: string;
+  reviewed_at?: string;
 }
 
 type Period = 'date' | 'week' | 'month' | 'year';
@@ -335,10 +337,10 @@ export default function AttendancePage() {
       0
     );
 
-    // Calculate approved leave days in the period
+    // Calculate approved leave days in the period (include PENDING for visibility)
     const approvedLeaveDays = new Set<string>();
     leaveRequests
-      .filter(lr => lr.status === 'APPROVED')
+      .filter(lr => lr.status === 'APPROVED' || lr.status === 'PENDING')
       .forEach(lr => {
         const start = new Date(lr.start_date);
         const end = new Date(lr.end_date);
@@ -356,11 +358,29 @@ export default function AttendancePage() {
     const eligibleSessions = sessions.filter(s => s.business_date <= todayStr);
     const eligibleDays = new Set(eligibleSessions.map(s => s.business_date)).size;
 
+    // For Date mode, show single-day status
+    if (period === 'date') {
+      const selectedBusinessDate = formatDate(selectedDate);
+      const todaysAttendance = sessions.find(s => s.business_date === selectedBusinessDate);
+      return {
+        daysWorked: todaysAttendance ? 1 : 0,
+        totalDuration: todaysAttendance?.duration_minutes ? formatDuration(todaysAttendance.duration_minutes) : '—',
+        approvedLeaveDays: approvedLeaveDays.has(selectedBusinessDate) ? 1 : 0,
+        eligibleAbsentDays: 0,
+        status: todaysAttendance?.sign_in_time ? (todaysAttendance.sign_out_time ? 'Completed' : 'In Progress') : 'Absent',
+        signInTime: todaysAttendance?.sign_in_time ? formatTime(todaysAttendance.sign_in_time) : '—',
+        signOutTime: todaysAttendance?.sign_out_time ? formatTime(todaysAttendance.sign_out_time) : '—',
+      };
+    }
+
     return {
       daysWorked: distinctDaysWorked,
       totalDuration: formatDuration(totalDuration),
       approvedLeaveDays: approvedLeaveDays.size,
       eligibleAbsentDays: Math.max(0, eligibleDays - distinctDaysWorked - approvedLeaveDays.size),
+      status: null,
+      signInTime: null,
+      signOutTime: null,
     };
   };
 
@@ -431,9 +451,11 @@ export default function AttendancePage() {
     fetchLeaveRequests();
   }, [leaveFilterMonth]);
 
+  const stats = getSummaryStats();
+
   return (
     <AppLayout>
-      <div className="space-y-6 pb-20 md:pb-0">
+      <div className="min-h-screen space-y-6 pb-20 md:pb-0">
         {/* Header with Live Clock */}
         <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-md border border-white/30 p-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -442,7 +464,7 @@ export default function AttendancePage() {
               <p className="text-gray-600 mt-1">Track your working hours and leave requests</p>
             </div>
             <div className="text-right">
-              <div className="text-3xl font-bold text-gray-900" style={{ fontFamily: 'monospace' }}>
+              <div className="text-4xl font-bold text-gray-900" style={{ fontFamily: 'monospace' }}>
                 {currentTime}
               </div>
               <div className="text-sm text-gray-600 mt-1">
@@ -469,7 +491,7 @@ export default function AttendancePage() {
                   className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                     period === p
                       ? 'bg-yellow-500 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                   }`}
                 >
                   {p.charAt(0).toUpperCase() + p.slice(1)}
@@ -479,7 +501,7 @@ export default function AttendancePage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => navigateDate('prev')}
-                className="p-2 rounded-lg hover:bg-gray-100"
+                className="p-2 rounded-lg hover:bg-gray-200 text-gray-700"
               >
                 ←
               </button>
@@ -488,7 +510,7 @@ export default function AttendancePage() {
               </span>
               <button
                 onClick={() => navigateDate('next')}
-                className="p-2 rounded-lg hover:bg-gray-100"
+                className="p-2 rounded-lg hover:bg-gray-200 text-gray-700"
               >
                 →
               </button>
@@ -502,58 +524,151 @@ export default function AttendancePage() {
           </div>
         </div>
 
-        {/* Compact Sign In/Sign Out Card */}
+        {/* Summary Panel with Chart and Statistics */}
         <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-md border border-white/30 p-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="flex-1">
-              <h2 className="text-lg font-semibold text-gray-900">
-                {getCurrentStatus()}
-              </h2>
-              {isToday() && getTodayAttendance() && (
-                <div className="mt-2 space-y-1">
-                  {getTodayAttendance()?.sign_in_time && (
-                    <p className="text-sm text-gray-600">
-                      Sign In: {formatTime(getTodayAttendance()!.sign_in_time)}
-                    </p>
-                  )}
-                  {getTodayAttendance()?.sign_out_time && (
-                    <p className="text-sm text-gray-600">
-                      Sign Out: {formatTime(getTodayAttendance()!.sign_out_time!)}
-                    </p>
-                  )}
-                  {getTodayAttendance()?.duration_minutes && (
-                    <p className="text-sm text-gray-600">
-                      Duration: {formatDuration(getTodayAttendance()!.duration_minutes)}
-                    </p>
-                  )}
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Left Column - Attendance Breakdown Chart */}
+            {period === 'month' && (
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Attendance Breakdown (Month)</h3>
+                <div className="flex flex-col md:flex-row items-center gap-6">
+                  {/* CSS Pie Chart */}
+                  <div className="relative w-48 h-48">
+                    <svg viewBox="0 0 36 36" className="w-full h-full">
+                      {/* Background circle */}
+                      <path
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke="#e5e7eb"
+                        strokeWidth="3"
+                      />
+                      {/* Worked (Green) */}
+                      <path
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke="#22c55e"
+                        strokeWidth="3"
+                        strokeDasharray={`${(stats.daysWorked / 30) * 100}, 100`}
+                      />
+                      {/* Leave (Blue) */}
+                      <path
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke="#3b82f6"
+                        strokeWidth="3"
+                        strokeDasharray={`${(stats.approvedLeaveDays / 30) * 100}, 100`}
+                        strokeDashoffset={`-${(stats.daysWorked / 30) * 100}`}
+                      />
+                      {/* Absent (Red) */}
+                      <path
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke="#ef4444"
+                        strokeWidth="3"
+                        strokeDasharray={`${(stats.eligibleAbsentDays / 30) * 100}, 100`}
+                        strokeDashoffset={`-${((stats.daysWorked + stats.approvedLeaveDays) / 30) * 100}`}
+                      />
+                    </svg>
+                  </div>
+                  {/* Legend */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-full bg-green-500"></div>
+                      <span className="text-sm text-gray-700">Days Worked: {stats.daysWorked}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-full bg-blue-500"></div>
+                      <span className="text-sm text-gray-700">Leave Days: {stats.approvedLeaveDays}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-full bg-red-500"></div>
+                      <span className="text-sm text-gray-700">Absent Days: {stats.eligibleAbsentDays}</span>
+                    </div>
+                  </div>
                 </div>
-              )}
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={handleSignIn}
-                disabled={!isToday() || isSignedIn() || isAttendanceCompleted() || signingIn || signingOut}
-                className={`px-6 py-3 rounded-lg font-medium transition-colors ${
-                  !isToday() || isSignedIn() || isAttendanceCompleted() || signingIn || signingOut
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-green-500 hover:bg-green-600 text-white'
-                }`}
-              >
-                {signingIn ? 'Signing In...' : 'Sign In'}
-              </button>
-              <button
-                onClick={handleSignOut}
-                disabled={!isToday() || !isSignedIn() || signingIn || signingOut}
-                className={`px-6 py-3 rounded-lg font-medium transition-colors ${
-                  !isToday() || !isSignedIn() || signingIn || signingOut
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-red-500 hover:bg-red-600 text-white'
-                }`}
-              >
-                {signingOut ? 'Signing Out...' : 'Sign Out'}
-              </button>
+              </div>
+            )}
+
+            {/* Right Column - Summary Statistics */}
+            <div className="flex-1">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {period === 'date' ? 'Date Summary' : `${period.charAt(0).toUpperCase() + period.slice(1)} Summary`}
+                </h3>
+                {/* Sign In/Sign Out Buttons */}
+                {isToday() && (
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleSignIn}
+                      disabled={!isToday() || isSignedIn() || isAttendanceCompleted() || signingIn || signingOut}
+                      className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                        !isToday() || isSignedIn() || isAttendanceCompleted() || signingIn || signingOut
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          : 'bg-green-500 hover:bg-green-600 text-white'
+                      }`}
+                    >
+                      {signingIn ? 'Signing In...' : 'Sign In'}
+                    </button>
+                    <button
+                      onClick={handleSignOut}
+                      disabled={!isToday() || !isSignedIn() || signingIn || signingOut}
+                      className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                        !isToday() || !isSignedIn() || signingIn || signingOut
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          : 'bg-gray-500 hover:bg-gray-600 text-white'
+                      }`}
+                    >
+                      {signingOut ? 'Signing Out...' : 'Sign Out'}
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Statistics */}
+              <div className="space-y-3">
+                {period === 'date' ? (
+                  <>
+                    <div className="flex justify-between py-2 border-b border-gray-200">
+                      <span className="text-gray-600">Status</span>
+                      <span className="font-medium text-gray-900">{stats.status}</span>
+                    </div>
+                    <div className="flex justify-between py-2 border-b border-gray-200">
+                      <span className="text-gray-600">Sign In</span>
+                      <span className="font-medium text-gray-900">{stats.signInTime}</span>
+                    </div>
+                    <div className="flex justify-between py-2 border-b border-gray-200">
+                      <span className="text-gray-600">Sign Out</span>
+                      <span className="font-medium text-gray-900">{stats.signOutTime}</span>
+                    </div>
+                    <div className="flex justify-between py-2">
+                      <span className="text-gray-600">Duration</span>
+                      <span className="font-medium text-gray-900">{stats.totalDuration}</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex justify-between py-2 border-b border-gray-200">
+                      <span className="text-gray-600">Total Scheduled Days</span>
+                      <span className="font-medium text-gray-900">{stats.daysWorked + stats.approvedLeaveDays + stats.eligibleAbsentDays}</span>
+                    </div>
+                    <div className="flex justify-between py-2 border-b border-gray-200">
+                      <span className="text-gray-600">Days Worked</span>
+                      <span className="font-medium text-gray-900">{stats.daysWorked}</span>
+                    </div>
+                    <div className="flex justify-between py-2 border-b border-gray-200">
+                      <span className="text-gray-600">Leave Days</span>
+                      <span className="font-medium text-gray-900">{stats.approvedLeaveDays}</span>
+                    </div>
+                    <div className="flex justify-between py-2">
+                      <span className="text-gray-600">Absent Days</span>
+                      <span className="font-medium text-gray-900">{stats.eligibleAbsentDays}</span>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
+
           {error && (
             <div className="mt-4 bg-red-100 border border-red-300 text-red-700 px-4 py-2 rounded-lg">
               {error}
@@ -562,101 +677,6 @@ export default function AttendancePage() {
           {successMessage && (
             <div className="mt-4 bg-green-100 border border-green-300 text-green-700 px-4 py-2 rounded-lg">
               {successMessage}
-            </div>
-          )}
-        </div>
-
-        {/* Attendance Summary */}
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-md border border-white/30 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            {period.charAt(0).toUpperCase() + period.slice(1)} Summary
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-white/50 rounded-xl p-4">
-              <p className="text-sm text-gray-600">Days Worked</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">
-                {getSummaryStats().daysWorked}
-              </p>
-            </div>
-            <div className="bg-white/50 rounded-xl p-4">
-              <p className="text-sm text-gray-600">Total Duration</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">
-                {getSummaryStats().totalDuration}
-              </p>
-            </div>
-            <div className="bg-white/50 rounded-xl p-4">
-              <p className="text-sm text-gray-600">Leave Days</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">
-                {getSummaryStats().approvedLeaveDays}
-              </p>
-            </div>
-            <div className="bg-white/50 rounded-xl p-4">
-              <p className="text-sm text-gray-600">Absent Days</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">
-                {getSummaryStats().eligibleAbsentDays}
-              </p>
-            </div>
-          </div>
-
-          {/* Monthly Pie Chart */}
-          {period === 'month' && (
-            <div className="mt-6 pt-6 border-t border-gray-200">
-              <h3 className="text-md font-semibold text-gray-900 mb-4">Monthly Overview</h3>
-              <div className="flex flex-col md:flex-row items-center gap-6">
-                {/* Simple CSS Pie Chart */}
-                <div className="relative w-40 h-40">
-                  <svg viewBox="0 0 36 36" className="w-full h-full">
-                    {/* Background circle */}
-                    <path
-                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                      fill="none"
-                      stroke="#fee2e2"
-                      strokeWidth="3"
-                    />
-                    {/* Worked (Green) */}
-                    <path
-                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                      fill="none"
-                      stroke="#22c55e"
-                      strokeWidth="3"
-                      strokeDasharray={`${(getSummaryStats().daysWorked / 30) * 100}, 100`}
-                    />
-                    {/* Leave (Yellow) */}
-                    <path
-                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                      fill="none"
-                      stroke="#eab308"
-                      strokeWidth="3"
-                      strokeDasharray={`${(getSummaryStats().approvedLeaveDays / 30) * 100}, 100`}
-                      strokeDashoffset={`-${(getSummaryStats().daysWorked / 30) * 100}`}
-                    />
-                    {/* Absent (Red) */}
-                    <path
-                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                      fill="none"
-                      stroke="#ef4444"
-                      strokeWidth="3"
-                      strokeDasharray={`${(getSummaryStats().eligibleAbsentDays / 30) * 100}, 100`}
-                      strokeDashoffset={`-${((getSummaryStats().daysWorked + getSummaryStats().approvedLeaveDays) / 30) * 100}`}
-                    />
-                  </svg>
-                </div>
-                {/* Legend */}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-full bg-green-500"></div>
-                    <span className="text-sm text-gray-700">Worked: {getSummaryStats().daysWorked} days</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-full bg-yellow-500"></div>
-                    <span className="text-sm text-gray-700">Leave: {getSummaryStats().approvedLeaveDays} days</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-full bg-red-500"></div>
-                    <span className="text-sm text-gray-700">Absent: {getSummaryStats().eligibleAbsentDays} days</span>
-                  </div>
-                </div>
-              </div>
             </div>
           )}
         </div>
@@ -703,7 +723,7 @@ export default function AttendancePage() {
                       <td className="px-4 py-3 text-sm">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                           !session.sign_in_time
-                            ? 'bg-gray-100 text-gray-700'
+                            ? 'bg-red-100 text-red-700'
                           : session.sign_out_time
                             ? 'bg-green-100 text-green-700'
                             : 'bg-yellow-100 text-yellow-700'
@@ -719,26 +739,23 @@ export default function AttendancePage() {
           )}
         </div>
 
-        {/* Leave Application - Button Only */}
+        {/* Leave Requests */}
         <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-md border border-white/30 p-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
             <div>
               <h2 className="text-lg font-semibold text-gray-900">Leave Requests</h2>
               <p className="text-sm text-gray-600 mt-1">Apply for leave or view your request history</p>
             </div>
             <button
               onClick={() => setShowLeaveModal(true)}
-              className="px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-medium transition-colors"
+              className="px-6 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-medium transition-colors"
             >
               Apply for Leave
             </button>
           </div>
-        </div>
 
-        {/* Leave Request History with Month Filter */}
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-md border border-white/30 p-6">
+          {/* Month Filter and History */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Leave Request History</h2>
             <input
               type="month"
               value={`${leaveFilterMonth.getFullYear()}-${String(leaveFilterMonth.getMonth() + 1).padStart(2, '0')}`}
@@ -746,9 +763,10 @@ export default function AttendancePage() {
                 const [year, month] = e.target.value.split('-').map(Number);
                 setLeaveFilterMonth(new Date(year, month - 1, 1));
               }}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 md:w-auto"
             />
           </div>
+
           {leaveRequests.length === 0 ? (
             <div className="text-center py-12">
               <span className="text-4xl">📅</span>

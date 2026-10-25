@@ -30,15 +30,26 @@ export async function GET(request: NextRequest) {
       { count: pendingEmployees },
       { count: suspendedEmployees },
       { count: pendingResetRequests },
-      { count: pendingLeaveRequests },
     ] = await Promise.all([
       serviceRoleClient.from('profiles').select('*', { count: 'exact', head: true }),
       serviceRoleClient.from('profiles').select('*', { count: 'exact', head: true }).eq('status', 'ACTIVE'),
       serviceRoleClient.from('profiles').select('*', { count: 'exact', head: true }).eq('status', 'PENDING'),
       serviceRoleClient.from('profiles').select('*', { count: 'exact', head: true }).eq('status', 'SUSPENDED'),
       serviceRoleClient.from('password_reset_requests').select('*', { count: 'exact', head: true }).eq('status', 'PENDING'),
-      serviceRoleClient.from('leave_requests').select('*', { count: 'exact', head: true }).eq('status', 'PENDING'),
     ]);
+
+    // Get pending leave requests count (handle case where table doesn't exist yet)
+    let pendingLeaveRequests = 0;
+    try {
+      const { count } = await serviceRoleClient
+        .from('leave_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'PENDING');
+      pendingLeaveRequests = count || 0;
+    } catch (error) {
+      // Table doesn't exist yet (migration 017 not applied), count as 0
+      pendingLeaveRequests = 0;
+    }
 
     // Get registrations over time (last 30 days)
     const thirtyDaysAgo = new Date();
