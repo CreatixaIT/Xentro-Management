@@ -63,11 +63,12 @@ This document summarizes the complete implementation of the Inventory Management
 - Simplified frontend URL extraction with type guards
 - Removed verbose diagnostic logging
 
-### Phase 10: Photo Path Data Cleanup (Commit `059d1a1`)
-- Discovered root cause: database photo_path values didn't match Storage objects
-- Cleared 4 invalid photo_path values from database
-- Added validation to prevent future invalid paths
-- Database now has no photo_path values (users need to re-upload)
+### Phase 10: Photo Path Verification and Correction (Commit `1e3aca8`)
+- Discovered previous diagnostic was incomplete - Storage objects actually existed
+- Found 12 image files in folder structure in Storage
+- Restored 4 photo_path values that were incorrectly cleared
+- Verified signed URLs generate correctly and images load
+- Confirmed actual root cause was API response shape ambiguity (fixed in phase 9)
 
 ## Current Status
 
@@ -87,7 +88,7 @@ This document summarizes the complete implementation of the Inventory Management
 
 ### ⏳ Requires Manual Action
 
-**CRITICAL 1:** Migration 014 must be applied manually via Supabase Dashboard SQL Editor before edit functionality will work in production.
+**CRITICAL:** Migration 014 must be applied manually via Supabase Dashboard SQL Editor before edit functionality will work in production.
 
 **Migration File:** `supabase/migrations/014_fix_inventory_update_rls.sql`
 
@@ -98,15 +99,7 @@ This document summarizes the complete implementation of the Inventory Management
 4. Copy and paste the SQL from migration 014
 5. Click "Run"
 
-**CRITICAL 2:** Photos need to be re-uploaded for existing inventory items.
-
-**Context:** The database had 4 inventory items with photo_path values that pointed to non-existent Storage objects. These have been cleared. Users need to:
-1. Edit each of the 4 items (break, kart, steering, chain)
-2. Re-upload their photos
-3. Save
-4. Verify thumbnails appear
-
-**Future uploads will work correctly** with the standardized API contract and path validation.
+**Photo Status:** The 4 inventory items (break, kart, steering, chain) have valid photo_path values that point to existing Storage objects. These were restored after a diagnostic error. Photo thumbnails should work correctly in production with the standardized API contract.
 
 ## Files Changed
 
@@ -177,14 +170,15 @@ npm run build      # ✅ Success (35 routes)
 ```
 
 **Diagnostic Script Results:**
-- Cleared 4 invalid photo_path values from database
-- Storage contains only 1 object (a directory)
-- All inventory items now have null photo_path
+- Verified Storage contains 12 image files in folder structure
+- Restored 4 photo_path values that were incorrectly cleared
+- Verified signed URLs generate correctly for all 4 items
+- Verified images load successfully via signed URLs
 - Upload validation prevents future invalid paths
 
 ## Git Status
 
-**Latest Commit:** `fd3eeb3`
+**Latest Commit:** `1e3aca8`
 **Branch:** main
 **Push Result:** Pushed to main branch
 
@@ -198,35 +192,30 @@ npm run build      # ✅ Success (35 routes)
 
 2. **Verify Vercel Deployment:**
    - Check dashboard for build status
-   - Ensure latest commit `fd3eeb3` is deployed
+   - Ensure latest commit `1e3aca8` is deployed
 
-3. **Re-upload Photos for Existing Items:**
-   - Edit the 4 items (break, kart, steering, chain)
-   - Re-upload photos through the UI
-   - Verify thumbnails appear after save
+3. **Test Photo Thumbnails:**
+   - Verify thumbnails appear for the 4 items with photos (break, kart, steering, chain)
+   - Verify no `/[object%20Object]` requests in browser console
+   - Verify image requests use actual signed URLs
 
-4. **Test Inventory Creation:**
+4. **Test Photo Viewer:**
+   - Click thumbnail to open viewer
+   - Test × button, backdrop click, Escape key
+   - Verify clicking image does not close viewer
+
+5. **Test Inventory Creation:**
    - Create new item with all fields
    - Upload photo
    - Verify item appears in list
    - Verify thumbnail appears
 
-5. **Test Inventory Editing:**
+6. **Test Inventory Editing:**
    - Edit existing item
    - Verify changes save
    - Reload and verify changes persist
 
-6. **Test Photo Thumbnails:**
-   - Verify thumbnails appear for items with newly uploaded photos
-   - Verify no `/[object%20Object]` requests in browser console
-   - Verify image requests use actual signed URLs
-
-7. **Test Photo Viewer:**
-   - Click thumbnail to open viewer
-   - Test × button, backdrop click, Escape key
-   - Verify clicking image does not close viewer
-
-8. **Test PDF Export:**
+7. **Test PDF Export:**
    - Select specific columns
    - Generate PDF
    - Verify only selected columns appear
@@ -243,7 +232,7 @@ npm run build      # ✅ Success (35 routes)
 The Inventory Management module is fully implemented with all required features. The code is complete and pushed to GitHub. The remaining actions are:
 
 1. Apply migration 014 manually via Supabase Dashboard to enable edit functionality
-2. Re-upload photos for the 4 affected inventory items
-3. Test new photo uploads work correctly with the standardized API contract
+2. Verify Vercel deployment of commit `1e3aca8`
+3. Test photo thumbnails and viewer in production (4 items have valid photos)
 
-**Status:** ✅ **CODE COMPLETE** - Awaiting manual migration application and photo re-uploads.
+**Status:** ✅ **CODE COMPLETE** - Awaiting manual migration application and production verification.
