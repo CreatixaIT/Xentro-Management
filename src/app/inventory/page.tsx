@@ -443,13 +443,13 @@ export default function InventoryPage() {
 
   return (
     <AppLayout>
-      <div className="space-y-6 pb-20 md:pb-0">
+      <div className="flex flex-col h-[calc(100vh-80px)] min-h-0">
         {/* Header */}
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-md border border-white/30 p-6">
+        <div className="flex-shrink-0 bg-white/80 backdrop-blur-xl rounded-2xl shadow-md border border-white/30 p-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Inventory Management</h1>
-              <p className="text-gray-600 mt-1">Track and manage inventory items</p>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Inventory Management</h1>
+              <p className="text-gray-600 mt-1 text-sm md:text-base">Track and manage inventory items</p>
             </div>
             <div className="flex flex-wrap gap-2">
               <button
@@ -478,11 +478,13 @@ export default function InventoryPage() {
               </button>
             </div>
           </div>
-          
-          {/* Filters */}
-          <div className="mt-6 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        </div>
+
+        {/* Filters */}
+        <div className="flex-shrink-0 bg-white/80 backdrop-blur-xl rounded-2xl shadow-md border border-white/30 p-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Month</label>
+              <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">Month</label>
               <select
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
@@ -495,7 +497,7 @@ export default function InventoryPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
+              <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">Year</label>
               <select
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(parseInt(e.target.value))}
@@ -508,7 +510,7 @@ export default function InventoryPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Date Basis</label>
+              <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">Date Basis</label>
               <select
                 value={dateBasis}
                 onChange={(e) => setDateBasis(e.target.value as 'purchase_date' | 'created_at')}
@@ -519,7 +521,7 @@ export default function InventoryPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+              <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">Category</label>
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
@@ -532,7 +534,7 @@ export default function InventoryPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Receipt</label>
+              <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">Receipt</label>
               <select
                 value={selectedReceipt}
                 onChange={(e) => setSelectedReceipt(e.target.value)}
@@ -544,7 +546,7 @@ export default function InventoryPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+              <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">Search</label>
               <input
                 type="text"
                 value={searchQuery}
@@ -557,27 +559,27 @@ export default function InventoryPage() {
         </div>
 
         {/* Summary */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="flex-shrink-0 grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-white/80 backdrop-blur-xl rounded-xl shadow-md border border-white/30 p-4">
-            <p className="text-gray-600 text-sm">Total Records</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">{summary.totalRecords}</p>
+            <p className="text-gray-600 text-xs md:text-sm">Total Records</p>
+            <p className="text-xl md:text-2xl font-bold text-gray-900 mt-1">{summary.totalRecords}</p>
           </div>
           <div className="bg-white/80 backdrop-blur-xl rounded-xl shadow-md border border-white/30 p-4">
-            <p className="text-gray-600 text-sm">Total Quantity</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">{summary.totalQuantity}</p>
+            <p className="text-gray-600 text-xs md:text-sm">Total Quantity</p>
+            <p className="text-xl md:text-2xl font-bold text-gray-900 mt-1">{summary.totalQuantity}</p>
           </div>
           <div className="bg-white/80 backdrop-blur-xl rounded-xl shadow-md border border-white/30 p-4">
-            <p className="text-gray-600 text-sm">Total Remaining</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">{summary.totalLeft}</p>
+            <p className="text-gray-600 text-xs md:text-sm">Total Remaining</p>
+            <p className="text-xl md:text-2xl font-bold text-gray-900 mt-1">{summary.totalLeft}</p>
           </div>
           <div className="bg-white/80 backdrop-blur-xl rounded-xl shadow-md border border-white/30 p-4">
-            <p className="text-gray-600 text-sm">Total Value</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">BDT {summary.totalValue.toFixed(2)}</p>
+            <p className="text-gray-600 text-xs md:text-sm">Total Value</p>
+            <p className="text-xl md:text-2xl font-bold text-gray-900 mt-1">BDT {summary.totalValue.toFixed(2)}</p>
           </div>
         </div>
 
         {/* Inventory List */}
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-md border border-white/30 p-6">
+        <div className="flex-1 min-h-0 bg-white/80 backdrop-blur-xl rounded-2xl shadow-md border border-white/30 p-6 overflow-hidden flex flex-col">
           {loading ? (
             <div className="text-center py-12">
               <p className="text-gray-600">Loading...</p>
@@ -588,9 +590,9 @@ export default function InventoryPage() {
               <p className="text-gray-600 mt-4">No inventory items found</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto flex-1">
               <table className="w-full">
-                <thead>
+                <thead className="sticky top-0 bg-white/90 backdrop-blur-xl">
                   <tr className="border-b border-gray-200">
                     {selectedColumns.map(col => (
                       <th
@@ -603,20 +605,20 @@ export default function InventoryPage() {
                             setSortOrder('asc');
                           }
                         }}
-                        className="px-4 py-3 text-left text-sm font-semibold text-gray-900 cursor-pointer hover:bg-gray-50"
+                        className="px-3 md:px-4 py-3 text-left text-xs md:text-sm font-semibold text-gray-900 cursor-pointer hover:bg-gray-50 whitespace-nowrap"
                       >
                         {COLUMN_LABELS[col]}
                         {sortBy === col && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
                       </th>
                     ))}
-                    <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">Actions</th>
+                    <th className="px-3 md:px-4 py-3 text-right text-xs md:text-sm font-semibold text-gray-900 whitespace-nowrap">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {inventory.map(item => (
                     <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50">
                       {selectedColumns.map(col => (
-                        <td key={col} className="px-4 py-3 text-sm text-gray-700">
+                        <td key={col} className="px-3 md:px-4 py-3 text-xs md:text-sm text-gray-700 whitespace-nowrap">
                           {col === 'photo' && item.photo_path && (
                             <button
                               onClick={() => item.photo_path && openPhotoViewer(item.photo_path)}
@@ -626,7 +628,7 @@ export default function InventoryPage() {
                                 <img
                                   src={photoUrls[item.id]}
                                   alt="Product"
-                                  className="w-12 h-12 object-cover rounded-lg"
+                                  className="w-10 h-10 md:w-12 md:h-12 object-cover rounded-lg"
                                   onError={(e) => {
                                     console.error('Failed to load thumbnail for item:', item.id, 'src:', photoUrls[item.id]);
                                     (e.target as HTMLImageElement).style.display = 'none';
@@ -636,12 +638,12 @@ export default function InventoryPage() {
                                   }}
                                 />
                               ) : (
-                                <span className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">—</span>
+                                <span className="w-10 h-10 md:w-12 md:h-12 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 text-xs">—</span>
                               )}
                             </button>
                           )}
                           {col === 'photo' && !item.photo_path && (
-                            <span className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">—</span>
+                            <span className="w-10 h-10 md:w-12 md:h-12 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 text-xs">—</span>
                           )}
                           {col === 'category' && item.inventory_categories?.name}
                           {col === 'user_entry' && item.creator?.username}
@@ -651,16 +653,16 @@ export default function InventoryPage() {
                           {col !== 'photo' && col !== 'category' && col !== 'user_entry' && col !== 'receipt' && col !== 'price' && col !== 'unit_cost' && item[col as keyof InventoryItem]?.toString()}
                         </td>
                       ))}
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-3 md:px-4 py-3 text-right whitespace-nowrap">
                         <button
                           onClick={() => handleEdit(item)}
-                          className="text-blue-600 hover:text-blue-800 mr-2"
+                          className="text-blue-600 hover:text-blue-800 mr-2 text-xs md:text-sm"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => handleDelete(item.id)}
-                          className="text-red-600 hover:text-red-800"
+                          className="text-red-600 hover:text-red-800 text-xs md:text-sm"
                         >
                           Delete
                         </button>
