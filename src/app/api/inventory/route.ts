@@ -170,6 +170,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: `Failed to upload photo: ${uploadError.message}` }, { status: 500 });
     }
 
+    // Verify the uploadData.path is valid
+    if (!uploadData || !uploadData.path) {
+      console.error('POST: Upload succeeded but no path returned');
+      return NextResponse.json({ error: 'Upload succeeded but no path returned' }, { status: 500 });
+    }
+
     photo_path = uploadData.path;
     console.log('POST: Photo uploaded successfully to:', photo_path);
   }
