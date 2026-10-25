@@ -144,22 +144,31 @@ export default function InventoryPage() {
             const photoResponse = await fetch(`/api/inventory/photo-url?path=${encodeURIComponent(item.photo_path!)}`);
             const photoResult = await photoResponse.json();
             
+            console.log('Photo URL response for item', item.id, ':', photoResult);
+            console.log('Result.url type:', typeof photoResult.url);
+            console.log('Result.url value:', photoResult.url);
+            
             // Extract the actual URL string from the response
             let url: string | null = null;
             if (photoResult.url) {
               // If url is a string, use it directly
               if (typeof photoResult.url === 'string') {
                 url = photoResult.url;
+                console.log('Using url as string');
               }
               // If url is an object with signedUrl property, extract it
               else if (photoResult.url.signedUrl) {
                 url = photoResult.url.signedUrl;
+                console.log('Extracted signedUrl from object');
               }
             }
+            
+            console.log('Final extracted url for item', item.id, ':', url, typeof url);
             
             if (url && photoResponse.ok) {
               return { id: item.id, url };
             }
+            console.error('Failed to get valid URL for item:', item.id);
             return null;
           } catch (error) {
             console.error('Failed to fetch photo URL for item:', item.id, error);
@@ -343,6 +352,9 @@ export default function InventoryPage() {
     const response = await fetch(`/api/inventory/photo-url?path=${encodeURIComponent(photoPath)}`);
     const result = await response.json();
     
+    console.log('Viewer photo URL response:', result);
+    console.log('Result.url type:', typeof result.url);
+    
     // Extract the actual URL string from the response
     let url: string | null = null;
     if (result.url) {
@@ -352,6 +364,8 @@ export default function InventoryPage() {
         url = result.url.signedUrl;
       }
     }
+    
+    console.log('Viewer final extracted url:', url, typeof url);
     
     if (response.ok && url) {
       setCurrentPhotoUrl(url);

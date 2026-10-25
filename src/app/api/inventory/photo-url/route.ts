@@ -30,6 +30,18 @@ export async function GET(request: Request) {
   }
 
   console.log('Photo URL generated successfully for:', photoPath);
+  console.log('Response data type:', typeof url);
+  console.log('Response data keys:', url ? Object.keys(url) : 'null');
+  
   // Supabase returns { signedUrl, expiresIn }, extract just the signedUrl string
-  return NextResponse.json({ url: url.signedUrl });
+  const signedUrl = url?.signedUrl;
+  console.log('Extracted signedUrl type:', typeof signedUrl);
+  console.log('Is signedUrl a string:', typeof signedUrl === 'string');
+  
+  if (!signedUrl || typeof signedUrl !== 'string') {
+    console.error('Failed to extract signedUrl string from response');
+    return NextResponse.json({ error: 'Failed to generate signed URL' }, { status: 500 });
+  }
+  
+  return NextResponse.json({ url: signedUrl });
 }
