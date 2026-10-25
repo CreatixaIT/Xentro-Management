@@ -31,29 +31,6 @@ export async function PATCH(
     original_quantity, // Accept but ignore for edits
   } = body;
 
-  console.log('=== PATCH DIAGNOSTICS ===');
-  console.log('Request ID:', id);
-  console.log('ID type:', typeof id);
-  console.log('ID length:', id?.length);
-  console.log('Is valid UUID:', /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id));
-  console.log('Authenticated user ID:', user.id);
-  console.log('User email:', user.email);
-  console.log('User role:', user.role);
-  console.log('Request body keys:', Object.keys(body));
-  console.log('=======================');
-
-  // Test: Can we query the item with SELECT?
-  console.log('Testing SELECT with same ID...');
-  const { data: testItem, error: testError } = await supabase
-    .from('inventory')
-    .select('id, name')
-    .eq('id', id)
-    .maybeSingle();
-  
-  console.log('SELECT test result:', testItem);
-  console.log('SELECT test error:', testError);
-  console.log('=======================');
-
   // Validation
   if (left_item !== undefined && left_item < 0) {
     return NextResponse.json({ error: 'Remaining stock cannot be negative' }, { status: 400 });
@@ -67,23 +44,53 @@ export async function PATCH(
 
   // Handle photo upload if provided
   if (photo_data) {
-    const fileName = `${user.id}/${Date.now()}.jpg`;
-    console.log('Uploading photo to:', fileName);
+    // Validate and extract base64 payload from data URL
+    if (!photo_data.startsWith('data:')) {
+      return NextResponse.json({ error: 'Invalid photo data format' }, { status: 400 });
+    }
+
+    // Extract MIME type and base64 payload
+    const matches = photo_data.match(/^data:([^;]+);base64,(.+)$/);
+    if (!matches) {
+      return NextResponse.json({ error: 'Invalid data URL format' }, { status: 400 });
+    }
+
+    const mimeType = matches[1];
+    const base64Payload = matches[2];
+
+    // Validate supported MIME types
+    const supportedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!supportedTypes.includes(mimeType)) {
+      return NextResponse.json({ error: `Unsupported image type: ${mimeType}` }, { status: 400 });
+    }
+
+    // Determine file extension from MIME type
+    const extension = mimeType === 'image/png' ? 'png' : 
+                     mimeType === 'image/webp' ? 'webp' : 'jpg';
+    
+    const fileName = `${user.id}/${Date.now()}.${extension}`;
+    console.log('PATCH: Uploading photo to:', fileName, 'Type:', mimeType);
+    
     const { data: uploadData, error: uploadError } = await supabase
       .storage
       .from('inventory-photos')
-      .upload(fileName, Buffer.from(photo_data, 'base64'), {
-        contentType: 'image/jpeg',
+      .upload(fileName, Buffer.from(base64Payload, 'base64'), {
+        contentType: mimeType,
         upsert: true,
       });
 
     if (uploadError) {
-      console.error('Photo upload error:', uploadError);
+      console.error('PATCH: Photo upload error:', uploadError);
       return NextResponse.json({ error: `Failed to upload photo: ${uploadError.message}` }, { status: 500 });
     }
 
+    if (!uploadData || !uploadData.path) {
+      console.error('PATCH: Upload succeeded but no path returned');
+      return NextResponse.json({ error: 'Upload succeeded but no path returned' }, { status: 500 });
+    }
+
     final_photo_path = uploadData.path;
-    console.log('Photo uploaded successfully to:', final_photo_path);
+    console.log('PATCH: Photo uploaded successfully to:', final_photo_path);
   }
 
   const updateData: any = {
@@ -106,7 +113,6 @@ export async function PATCH(
   if (final_photo_path !== undefined) updateData.photo_path = final_photo_path;
 
   console.log('Update data keys:', Object.keys(updateData));
-  console.log('About to execute UPDATE query on inventory table');
 
   // Perform the update with the authenticated client
   const { data: item, error } = await supabase
@@ -116,28 +122,11 @@ export async function PATCH(
     .select('*')
     .single();
 
-  console.log('UPDATE query executed');
-  console.log('Error object:', error);
-  console.log('Data object:', item);
-
   if (error) {
-    console.error('=== UPDATE ERROR DETAILS ===');
-    console.error('Error code:', error.code);
-    console.error('Error message:', error.message);
-    console.error('Error details:', error.details);
-    console.error('Error hint:', error.hint);
-    console.error('=========================');
-    
-    return NextResponse.json({ 
-      error: `Update failed: ${error.message}`,
-      code: error.code,
-      details: error.details,
-    }, { status: 500 });
+    console.error('UPDATE error:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  console.log('=== UPDATE SUCCESS ===');
-  console.log('Updated item ID:', item?.id);
-  console.log('===================');
   return NextResponse.json({ item });
 }
 
