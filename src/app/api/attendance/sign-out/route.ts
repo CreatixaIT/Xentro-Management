@@ -10,79 +10,49 @@ export async function POST() {
   }
 
   try {
-    // Get today's business date in Asia/Dhaka
-    const todayDhaka = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }));
-    const businessDate = todayDhaka.toISOString().split('T')[0];
+    // Use database function to sign out (generates timestamp server-side)
+    const { data: attendance, error: rpcError } = await supabase
+      .rpc('sign_out_attendance', { p_profile_id: user.id });
 
-    // Get today's attendance record
-    const { data: attendance, error: fetchError } = await supabase
-      .from('attendance')
-      .select('*')
-      .eq('profile_id', user.id)
-      .eq('business_date', businessDate)
-      .single();
-
-    if (fetchError) {
-      console.error('Error fetching attendance:', fetchError);
-      if (fetchError.code === 'PGRST116') {
+    if (rpcError) {
+      console.error('Sign-out RPC error:', rpcError);
+      if (rpcError.message && rpcError.message.includes('No open attendance record')) {
         return NextResponse.json(
           { error: 'No attendance record found for today. Please sign in first.' },
           { status: 400 }
         );
       }
-      return NextResponse.json({ error: 'Failed to fetch attendance' }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to sign out' }, { status: 500 });
     }
 
-    if (!attendance) {
+    if (!attendance || attendance.length === 0) {
       return NextResponse.json(
         { error: 'No attendance record found for today. Please sign in first.' },
         { status: 400 }
       );
     }
 
-    if (!attendance.time_in) {
-      return NextResponse.json(
-        { error: 'No sign-in time found. Please sign in first.' },
-        { status: 400 }
-      );
-    }
-
-    if (attendance.time_out) {
-      return NextResponse.json(
-        { error: 'You have already signed out today.' },
-        { status: 400 }
-      );
-    }
-
-    // Sign out - set time_out (database will set it via default, trigger will calculate duration)
-    const { data: updatedAttendance, error: updateError } = await supabase
-      .from('attendance')
-      .update({
-        time_out: new Date().toISOString(),
-      })
-      .eq('id', attendance.id)
-      .eq('profile_id', user.id) // Ensure user can only update their own record
-      .select()
-      .single();
-
-    if (updateError) {
-      console.error('Sign-out error:', updateError);
-      return NextResponse.json({ error: 'Failed to sign out' }, { status: 500 });
-    }
-
     return NextResponse.json({
       success: true,
       attendance: {
-        id: updatedAttendance.id,
-        time_in: updatedAttendance.time_in,
-        time_out: updatedAttendance.time_out,
-        business_date: updatedAttendance.business_date,
-        work_duration_minutes: updatedAttendance.work_duration_minutes,
-        status: updatedAttendance.status,
+        id: attendance[0].attendance_id,
+        time_in: attendance[0].attendance_time_in,
+        time_out: attendance[0].attendance_time_out,
+        business_date: formatDate(new Date()), // Will be set by database
+        work_duration_minutes: attendance[0].attendance_duration_minutes,
+        status: attendance[0].attendance_status,
       },
     });
   } catch (error) {
     console.error('Sign-out error:', error);
     return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
+}
+
+// Helper function to format date as YYYY-MM-DD
+function formatDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }

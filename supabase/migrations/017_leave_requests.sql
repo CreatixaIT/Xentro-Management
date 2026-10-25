@@ -41,7 +41,7 @@ CREATE POLICY "Employees can create own leave requests"
   TO authenticated
   WITH CHECK (
     profile_id = auth.uid()
-    AND start_date >= (CURRENT_DATE AT TIME ZONE 'Asia/Dhaka')::DATE  -- Cannot request leave in the past (Asia/Dhaka)
+    AND start_date >= (now() AT TIME ZONE 'Asia/Dhaka')::date  -- Cannot request leave in the past (Asia/Dhaka)
     AND end_date >= start_date
     AND TRIM(reason) <> ''
   );
