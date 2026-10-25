@@ -41,7 +41,7 @@ CREATE POLICY "Employees can create own leave requests"
   TO authenticated
   WITH CHECK (
     profile_id = auth.uid()
-    AND start_date >= CURRENT_DATE  -- Cannot request leave in the past
+    AND start_date >= (CURRENT_DATE AT TIME ZONE 'Asia/Dhaka')::DATE  -- Cannot request leave in the past (Asia/Dhaka)
     AND end_date >= start_date
     AND TRIM(reason) <> ''
   );
@@ -91,13 +91,18 @@ RETURNS BOOLEAN AS $$
 DECLARE
   v_count INTEGER;
 BEGIN
+  -- Validate that the caller is checking their own leave requests
+  IF auth.uid() IS DISTINCT FROM p_profile_id THEN
+    RAISE EXCEPTION 'Unauthorized: can only check own leave requests';
+  END IF;
+
   SELECT COUNT(*) INTO v_count
-  FROM public.leave_requests
-  WHERE profile_id = p_profile_id
-  AND status IN ('PENDING', 'APPROVED')
-  AND (p_exclude_id IS NULL OR id != p_exclude_id)
+  FROM public.leave_requests lr
+  WHERE lr.profile_id = p_profile_id
+  AND lr.status IN ('PENDING', 'APPROVED')
+  AND (p_exclude_id IS NULL OR lr.id != p_exclude_id)
   AND (
-    (start_date <= p_end_date AND end_date >= p_start_date)
+    (lr.start_date <= p_end_date AND lr.end_date >= p_start_date)
   );
 
   RETURN v_count > 0;
@@ -105,3 +110,37 @@ END;
 $$ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public;
+
+-- Grant execution to authenticated role only
+REVOKE EXECUTE ON FUNCTION public.check_overlapping_leave_requests(UUID, DATE, DATE, UUID) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.check_overlapping_leave_requests(UUID, DATE, DATE, UUID) TO authenticated;
+
+-- Trigger function to prevent overlapping leave requests on insert
+CREATE OR REPLACE FUNCTION prevent_overlapping_leave_requests()
+RETURNS TRIGGER AS $$
+DECLARE
+  v_has_overlap BOOLEAN;
+BEGIN
+  -- Check for overlapping requests (excluding this one on update)
+  SELECT check_overlapping_leave_requests(
+    NEW.profile_id,
+    NEW.start_date,
+    NEW.end_date,
+    NEW.id  -- NULL on insert, set on update
+  ) INTO v_has_overlap;
+
+  IF v_has_overlap THEN
+    RAISE EXCEPTION 'Leave request overlaps with an existing request';
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public;
+
+-- Add trigger to prevent overlapping requests
+CREATE TRIGGER prevent_overlapping_leave_requests_trigger
+  BEFORE INSERT OR UPDATE ON public.leave_requests
+  FOR EACH ROW
+  EXECUTE FUNCTION prevent_overlapping_leave_requests();

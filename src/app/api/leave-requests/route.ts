@@ -66,7 +66,10 @@ export async function POST(req: Request) {
       );
     }
 
-    if (start.getTime() < new Date().setHours(0, 0, 0, 0)) {
+    // Check if start date is in the past using Asia/Dhaka timezone
+    const todayDhaka = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }));
+    todayDhaka.setHours(0, 0, 0, 0);
+    if (start.getTime() < todayDhaka.getTime()) {
       return NextResponse.json(
         { error: 'Cannot request leave for past dates' },
         { status: 400 }
@@ -88,12 +91,17 @@ export async function POST(req: Request) {
     }
 
     // Check for overlapping leave requests
-    const { data: hasOverlap } = await supabase
+    const { data: hasOverlap, error: overlapError } = await supabase
       .rpc('check_overlapping_leave_requests', {
         p_profile_id: user.id,
         p_start_date: startDate,
         p_end_date: endDate,
       });
+
+    if (overlapError) {
+      console.error('Overlap check error:', overlapError);
+      return NextResponse.json({ error: 'Failed to check for overlapping requests' }, { status: 500 });
+    }
 
     if (hasOverlap) {
       return NextResponse.json(

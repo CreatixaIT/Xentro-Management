@@ -11,8 +11,13 @@ export async function POST() {
 
   try {
     // Get current open session
-    const { data: openSession } = await supabase
+    const { data: openSession, error: rpcError } = await supabase
       .rpc('get_current_open_session', { p_profile_id: user.id });
+
+    if (rpcError) {
+      console.error('RPC error checking open session:', rpcError);
+      return NextResponse.json({ error: 'Failed to check session status' }, { status: 500 });
+    }
 
     if (!openSession || openSession.length === 0) {
       return NextResponse.json(
@@ -21,13 +26,17 @@ export async function POST() {
       );
     }
 
-    // Close the session
+    // Handle renamed return columns from RPC function
+    const sessionId = openSession[0].session_id || openSession[0].id;
+
+    // Close the session (database will set sign_out_time via default)
     const { data: session, error } = await supabase
       .from('attendance_sessions')
       .update({
         sign_out_time: new Date().toISOString(),
       })
-      .eq('id', openSession[0].id)
+      .eq('id', sessionId)
+      .eq('profile_id', user.id) // Ensure user can only close their own session
       .select()
       .single();
 

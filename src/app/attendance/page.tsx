@@ -159,21 +159,43 @@ export default function AttendancePage() {
     }
   };
 
-  // Get date range based on period
+  // Convert date to Asia/Dhaka timezone and format as YYYY-MM-DD
+  const toDhakaDate = (date: Date): Date => {
+    return new Date(date.toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }));
+  };
+
+  // Format date to YYYY-MM-DD in Asia/Dhaka timezone
+  const formatDate = (date: Date): string => {
+    const dhakaDate = toDhakaDate(date);
+    const year = dhakaDate.getFullYear();
+    const month = String(dhakaDate.getMonth() + 1).padStart(2, '0');
+    const day = String(dhakaDate.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  // Parse YYYY-MM-DD string to Date object in Asia/Dhaka timezone
+  const parseDate = (dateString: string): Date => {
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    return toDhakaDate(date);
+  };
+
+  // Get date range based on period (using Asia/Dhaka timezone)
   const getDateRange = (period: Period, date: Date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const day = date.getDate();
+    const dhakaDate = toDhakaDate(date);
+    const year = dhakaDate.getFullYear();
+    const month = dhakaDate.getMonth();
+    const day = dhakaDate.getDate();
 
     switch (period) {
       case 'date':
         return {
-          startDate: formatDate(date),
-          endDate: formatDate(date),
+          startDate: formatDate(dhakaDate),
+          endDate: formatDate(dhakaDate),
         };
       case 'week': {
-        const startOfWeek = new Date(date);
-        startOfWeek.setDate(day - date.getDay());
+        const startOfWeek = new Date(dhakaDate);
+        startOfWeek.setDate(day - dhakaDate.getDay());
         const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(startOfWeek.getDate() + 6);
         return {
@@ -192,11 +214,6 @@ export default function AttendancePage() {
           endDate: formatDate(new Date(year, 11, 31)),
         };
     }
-  };
-
-  // Format date to YYYY-MM-DD
-  const formatDate = (date: Date) => {
-    return date.toISOString().split('T')[0];
   };
 
   // Format time to HH:MM
@@ -323,7 +340,7 @@ export default function AttendancePage() {
               <input
                 type="date"
                 value={formatDate(selectedDate)}
-                onChange={(e) => setSelectedDate(new Date(e.target.value))}
+                onChange={(e) => setSelectedDate(parseDate(e.target.value))}
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
               />
             </div>

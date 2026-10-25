@@ -13,7 +13,10 @@ CREATE TABLE public.attendance_sessions (
 CREATE INDEX idx_attendance_sessions_profile_id ON public.attendance_sessions(profile_id);
 CREATE INDEX idx_attendance_sessions_business_date ON public.attendance_sessions(business_date);
 CREATE INDEX idx_attendance_sessions_sign_in_time ON public.attendance_sessions(sign_in_time);
-CREATE INDEX idx_attendance_sessions_open_sessions ON public.attendance_sessions(profile_id, sign_out_time) WHERE sign_out_time IS NULL;
+-- Unique partial index to enforce one open session per employee
+CREATE UNIQUE INDEX idx_attendance_sessions_unique_open_session
+  ON public.attendance_sessions(profile_id)
+  WHERE sign_out_time IS NULL;
 
 -- Trigger for updated_at
 CREATE TRIGGER update_attendance_sessions_updated_at
@@ -60,7 +63,6 @@ CREATE POLICY "Employees can create own attendance sessions"
   TO authenticated
   WITH CHECK (
     profile_id = auth.uid()
-    AND sign_in_time = NOW()  -- Must use current server time
     AND sign_out_time IS NULL  -- New sessions must start open
   );
 
@@ -102,47 +104,65 @@ GRANT SELECT, INSERT, UPDATE ON public.attendance_sessions TO authenticated;
 -- Function to get current open session for a user
 CREATE OR REPLACE FUNCTION get_current_open_session(p_profile_id UUID)
 RETURNS TABLE (
-  id UUID,
-  sign_in_time TIMESTAMPTZ,
-  business_date DATE
+  session_id UUID,
+  session_sign_in_time TIMESTAMPTZ,
+  session_business_date DATE
 ) AS $$
 BEGIN
+  -- Validate that the caller is requesting their own session
+  IF auth.uid() IS DISTINCT FROM p_profile_id THEN
+    RAISE EXCEPTION 'Unauthorized: can only view own sessions';
+  END IF;
+
   RETURN QUERY
   SELECT
-    id,
-    sign_in_time,
-    business_date
-  FROM public.attendance_sessions
-  WHERE profile_id = p_profile_id
-  AND sign_out_time IS NULL
-  ORDER BY sign_in_time DESC
+    s.id AS session_id,
+    s.sign_in_time AS session_sign_in_time,
+    s.business_date AS session_business_date
+  FROM public.attendance_sessions s
+  WHERE s.profile_id = p_profile_id
+  AND s.sign_out_time IS NULL
+  ORDER BY s.sign_in_time DESC
   LIMIT 1;
 END;
 $$ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public;
 
+-- Grant execution to authenticated role only
+REVOKE EXECUTE ON FUNCTION public.get_current_open_session(UUID) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.get_current_open_session(UUID) TO authenticated;
+
 -- Function to get daily attendance summary
 CREATE OR REPLACE FUNCTION get_daily_attendance_summary(p_profile_id UUID, p_date DATE)
 RETURNS TABLE (
-  total_sessions INTEGER,
-  total_duration_minutes NUMERIC,
-  first_sign_in TIMESTAMPTZ,
-  last_sign_out TIMESTAMPTZ,
-  is_signed_in BOOLEAN
+  summary_total_sessions INTEGER,
+  summary_total_duration_minutes NUMERIC,
+  summary_first_sign_in TIMESTAMPTZ,
+  summary_last_sign_out TIMESTAMPTZ,
+  summary_is_signed_in BOOLEAN
 ) AS $$
 BEGIN
+  -- Validate that the caller is requesting their own summary
+  IF auth.uid() IS DISTINCT FROM p_profile_id THEN
+    RAISE EXCEPTION 'Unauthorized: can only view own attendance summary';
+  END IF;
+
   RETURN QUERY
   SELECT
-    COUNT(*) FILTER (WHERE sign_out_time IS NOT NULL)::INTEGER as total_sessions,
-    COALESCE(SUM(duration_minutes), 0) as total_duration_minutes,
-    MIN(sign_in_time) as first_sign_in,
-    MAX(sign_out_time) as last_sign_out,
-    BOOL_OR(sign_out_time IS NULL) as is_signed_in
-  FROM public.attendance_sessions
-  WHERE profile_id = p_profile_id
-  AND business_date = p_date;
+    COUNT(*) FILTER (WHERE s.sign_out_time IS NOT NULL)::INTEGER AS summary_total_sessions,
+    COALESCE(SUM(s.duration_minutes), 0) AS summary_total_duration_minutes,
+    MIN(s.sign_in_time) AS summary_first_sign_in,
+    MAX(s.sign_out_time) AS summary_last_sign_out,
+    BOOL_OR(s.sign_out_time IS NULL) AS summary_is_signed_in
+  FROM public.attendance_sessions s
+  WHERE s.profile_id = p_profile_id
+  AND s.business_date = p_date;
 END;
 $$ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public;
+
+-- Grant execution to authenticated role only
+REVOKE EXECUTE ON FUNCTION public.get_daily_attendance_summary(UUID, DATE) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.get_daily_attendance_summary(UUID, DATE) TO authenticated;
