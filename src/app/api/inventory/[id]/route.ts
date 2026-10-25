@@ -31,8 +31,14 @@ export async function PATCH(
     original_quantity, // Accept but ignore for edits
   } = body;
 
-  console.log('PATCH request for item:', id);
+  console.log('=== PATCH DIAGNOSTICS ===');
+  console.log('Request ID:', id);
+  console.log('ID type:', typeof id);
+  console.log('ID length:', id?.length);
+  console.log('Is valid UUID:', /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id));
+  console.log('Authenticated user ID:', user.id);
   console.log('Request body keys:', Object.keys(body));
+  console.log('=======================');
 
   // Validation
   if (left_item !== undefined && left_item < 0) {
@@ -86,6 +92,26 @@ export async function PATCH(
   if (final_photo_path !== undefined) updateData.photo_path = final_photo_path;
 
   console.log('Update data keys:', Object.keys(updateData));
+  console.log('About to execute UPDATE query on inventory table');
+
+  // Diagnostic: Check if the item exists before update
+  console.log('Checking if item exists before update...');
+  const { data: checkItem, error: checkError } = await supabase
+    .from('inventory')
+    .select('id, name')
+    .eq('id', id)
+    .maybeSingle();
+
+  console.log('Pre-update check result:', checkItem);
+  console.log('Pre-update check error:', checkError);
+
+  if (checkError) {
+    console.error('Pre-update check failed:', checkError);
+  }
+
+  if (!checkItem) {
+    console.error('Item does not exist in database or SELECT RLS blocked access');
+  }
 
   // Perform the update directly - if it fails, we'll get a clear error
   const { data: item, error } = await supabase
@@ -95,18 +121,25 @@ export async function PATCH(
     .select('*')
     .single();
 
+  console.log('UPDATE query executed');
+  console.log('Error object:', error);
+  console.log('Data object:', item);
+
   if (error) {
-    console.error('Inventory update error:', error);
+    console.error('=== UPDATE ERROR DETAILS ===');
     console.error('Error code:', error.code);
     console.error('Error message:', error.message);
     console.error('Error details:', error.details);
     console.error('Error hint:', error.hint);
+    console.error('=========================');
     
     // If the error is about coercing to single JSON object, it means zero rows were updated
     if (error.message.includes('Cannot coerce the result to a single JSON object')) {
+      console.error('Zero rows matched the UPDATE query');
       return NextResponse.json({ 
         error: 'Item not found or update not permitted',
         code: error.code,
+        details: `No inventory record with ID ${id} found or RLS prevents update`,
       }, { status: 404 });
     }
     
@@ -117,7 +150,9 @@ export async function PATCH(
     }, { status: 500 });
   }
 
-  console.log('Update successful for item:', id);
+  console.log('=== UPDATE SUCCESS ===');
+  console.log('Updated item ID:', item?.id);
+  console.log('===================');
   return NextResponse.json({ item });
 }
 
