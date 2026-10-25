@@ -1,7 +1,7 @@
 # Xentro Management Inventory Module - Complete Implementation Summary
 
 **Date**: 2026-10-26
-**Latest Commit**: `eea6e26`
+**Latest Commit**: `fd3eeb3`
 **Repository**: CreatixaIT/Xentro-Management.git
 **Branch**: main
 
@@ -56,11 +56,18 @@ This document summarizes the complete implementation of the Inventory Management
 - Added SELECT test before UPDATE to verify authentication
 - Documented the difference between USING and WITH CHECK clauses
 
-### Phase 9: Photo URL Extraction Fix (Commit `998ff35`)
-- Fixed API to extract `url.signedUrl` from Supabase response
-- Fixed frontend to handle both string and object responses
-- Root cause: API was returning object `{ signedUrl, expiresIn }` instead of string
-- Browser was requesting `/[object%20Object]` instead of actual URL
+### Phase 9: Photo URL API Contract Standardization (Commit `84e09f7`)
+- Added explicit TypeScript types for API response
+- Standardized response to `{ url: string }` on success
+- Added validation to ensure signedUrl is a string
+- Simplified frontend URL extraction with type guards
+- Removed verbose diagnostic logging
+
+### Phase 10: Photo Path Data Cleanup (Commit `059d1a1`)
+- Discovered root cause: database photo_path values didn't match Storage objects
+- Cleared 4 invalid photo_path values from database
+- Added validation to prevent future invalid paths
+- Database now has no photo_path values (users need to re-upload)
 
 ## Current Status
 
@@ -73,13 +80,14 @@ This document summarizes the complete implementation of the Inventory Management
 - Sorting by multiple fields
 - Column selection for table and PDF
 - PDF export with selected columns
-- Photo upload to private storage
-- Photo thumbnails in table (after deployment)
+- Photo upload to private storage with path validation
+- Photo thumbnails in table (for newly uploaded photos)
 - Enlarged image viewer with ×, backdrop, Escape
+- Standardized API contract for photo URLs
 
 ### ⏳ Requires Manual Action
 
-**CRITICAL:** Migration 014 must be applied manually via Supabase Dashboard SQL Editor before edit functionality will work in production.
+**CRITICAL 1:** Migration 014 must be applied manually via Supabase Dashboard SQL Editor before edit functionality will work in production.
 
 **Migration File:** `supabase/migrations/014_fix_inventory_update_rls.sql`
 
@@ -90,16 +98,26 @@ This document summarizes the complete implementation of the Inventory Management
 4. Copy and paste the SQL from migration 014
 5. Click "Run"
 
+**CRITICAL 2:** Photos need to be re-uploaded for existing inventory items.
+
+**Context:** The database had 4 inventory items with photo_path values that pointed to non-existent Storage objects. These have been cleared. Users need to:
+1. Edit each of the 4 items (break, kart, steering, chain)
+2. Re-upload their photos
+3. Save
+4. Verify thumbnails appear
+
+**Future uploads will work correctly** with the standardized API contract and path validation.
+
 ## Files Changed
 
 **API Routes:**
-- `src/app/api/inventory/route.ts` - GET and POST handlers
+- `src/app/api/inventory/route.ts` - GET and POST handlers, photo upload validation
 - `src/app/api/inventory/[id]/route.ts` - PATCH and DELETE handlers
 - `src/app/api/inventory/categories/route.ts` - Category management
-- `src/app/api/inventory/photo-url/route.ts` - Signed URL generation
+- `src/app/api/inventory/photo-url/route.ts` - Signed URL generation with TypeScript types
 
 **Frontend:**
-- `src/app/inventory/page.tsx` - Complete inventory page with all features
+- `src/app/inventory/page.tsx` - Complete inventory page with all features, type-safe URL extraction
 
 **Migrations:**
 - `supabase/migrations/008_inventory.sql` - Initial inventory table
@@ -112,7 +130,7 @@ This document summarizes the complete implementation of the Inventory Management
 - `INVENTORY_SAVE_FIX_REPORT.md` - Save button fix
 - `INVENTORY_LOADING_PDF_FIX_REPORT.md` - List loading and PDF fix
 - `INVENTORY_EDIT_PHOTO_FIX_REPORT.md` - Edit and photo viewer
-- `INVENTORY_PHOTO_FIX.md` - Photo URL extraction fix
+- `INVENTORY_PHOTO_ROOT_CAUSE_FIX.md` - Photo data inconsistency fix
 
 ## Database Schema
 
@@ -148,6 +166,8 @@ This document summarizes the complete implementation of the Inventory Management
 - ✅ Creator identity assigned server-side
 - ✅ No service role exposure to client
 - ✅ Supabase secret key not exposed
+- ✅ Photo upload path validation
+- ✅ Type-safe API responses
 
 ## Test Results
 
@@ -156,9 +176,15 @@ npm run typecheck  # ✅ Success
 npm run build      # ✅ Success (35 routes)
 ```
 
+**Diagnostic Script Results:**
+- Cleared 4 invalid photo_path values from database
+- Storage contains only 1 object (a directory)
+- All inventory items now have null photo_path
+- Upload validation prevents future invalid paths
+
 ## Git Status
 
-**Latest Commit:** `eea6e26`
+**Latest Commit:** `fd3eeb3`
 **Branch:** main
 **Push Result:** Pushed to main branch
 
@@ -172,29 +198,35 @@ npm run build      # ✅ Success (35 routes)
 
 2. **Verify Vercel Deployment:**
    - Check dashboard for build status
-   - Ensure latest commit `eea6e26` is deployed
+   - Ensure latest commit `fd3eeb3` is deployed
 
-3. **Test Inventory Creation:**
+3. **Re-upload Photos for Existing Items:**
+   - Edit the 4 items (break, kart, steering, chain)
+   - Re-upload photos through the UI
+   - Verify thumbnails appear after save
+
+4. **Test Inventory Creation:**
    - Create new item with all fields
    - Upload photo
    - Verify item appears in list
+   - Verify thumbnail appears
 
-4. **Test Inventory Editing:**
+5. **Test Inventory Editing:**
    - Edit existing item
    - Verify changes save
    - Reload and verify changes persist
 
-5. **Test Photo Thumbnails:**
-   - Verify thumbnails appear for items with photos
+6. **Test Photo Thumbnails:**
+   - Verify thumbnails appear for items with newly uploaded photos
    - Verify no `/[object%20Object]` requests in browser console
    - Verify image requests use actual signed URLs
 
-6. **Test Photo Viewer:**
+7. **Test Photo Viewer:**
    - Click thumbnail to open viewer
    - Test × button, backdrop click, Escape key
    - Verify clicking image does not close viewer
 
-7. **Test PDF Export:**
+8. **Test PDF Export:**
    - Select specific columns
    - Generate PDF
    - Verify only selected columns appear
@@ -204,9 +236,14 @@ npm run build      # ✅ Success (35 routes)
 - Migration 014 must be applied manually (Supabase CLI not working due to Docker)
 - Production deployment status not independently verified
 - Production runtime testing not performed
+- Existing photos were cleared due to data inconsistency (users need to re-upload)
 
 ## Conclusion
 
-The Inventory Management module is fully implemented with all required features. The code is complete and pushed to GitHub. The only remaining action is to apply migration 014 manually via Supabase Dashboard to enable the edit functionality in production.
+The Inventory Management module is fully implemented with all required features. The code is complete and pushed to GitHub. The remaining actions are:
 
-**Status:** ✅ **CODE COMPLETE** - Awaiting manual migration application and production verification.
+1. Apply migration 014 manually via Supabase Dashboard to enable edit functionality
+2. Re-upload photos for the 4 affected inventory items
+3. Test new photo uploads work correctly with the standardized API contract
+
+**Status:** ✅ **CODE COMPLETE** - Awaiting manual migration application and photo re-uploads.
