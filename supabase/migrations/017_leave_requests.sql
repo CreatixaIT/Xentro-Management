@@ -6,6 +6,9 @@ CREATE TABLE public.leave_requests (
   end_date DATE NOT NULL,
   reason TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED', 'CANCELLED')),
+  admin_remarks TEXT,
+  reviewed_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+  reviewed_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CONSTRAINT end_date_after_start_date CHECK (end_date >= start_date),
@@ -58,6 +61,31 @@ CREATE POLICY "Employees can cancel own pending leave requests"
   WITH CHECK (
     profile_id = auth.uid()
     AND status = 'CANCELLED'
+  );
+
+-- Super Admin can approve/reject leave requests
+CREATE POLICY "Super Admin can approve reject leave requests"
+  ON public.leave_requests
+  FOR UPDATE
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE id = auth.uid()
+      AND role = 'SUPER_ADMIN'
+      AND status = 'ACTIVE'
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE id = auth.uid()
+      AND role = 'SUPER_ADMIN'
+      AND status = 'ACTIVE'
+    )
+    AND status IN ('APPROVED', 'REJECTED')
+    AND reviewed_by = auth.uid()
+    AND reviewed_at = NOW()
   );
 
 -- Service role can manage all leave requests

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-export async function GET() {
+export async function GET(req: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -10,11 +10,33 @@ export async function GET() {
   }
 
   try {
-    const { data: requests, error } = await supabase
+    const { searchParams } = new URL(req.url);
+    const year = searchParams.get('year');
+    const month = searchParams.get('month');
+
+    let query = supabase
       .from('leave_requests')
       .select('*')
       .eq('profile_id', user.id)
       .order('created_at', { ascending: false });
+
+    // Filter by month/year if provided (filter by date range overlap)
+    if (year && month) {
+      const yearNum = parseInt(year);
+      const monthNum = parseInt(month);
+      const monthStart = `${year}-${String(monthNum).padStart(2, '0')}-01`;
+      const monthEnd = `${year}-${String(monthNum).padStart(2, '0')}-31`;
+
+      // Filter requests whose date range overlaps with the selected month
+      query = query.or(`start_date.lte.${monthEnd},end_date.gte.${monthStart}`);
+    }
+
+    const { data: requests, error } = await query;
+
+    // Handle case where table doesn't exist yet
+    if (error && error.code === '42P01') {
+      return NextResponse.json({ requests: [] });
+    }
 
     if (error) {
       console.error('Fetch leave requests error:', error);

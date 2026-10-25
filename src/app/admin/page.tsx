@@ -9,6 +9,7 @@ interface Stats {
   pendingEmployees: number;
   suspendedEmployees: number;
   pendingResetRequests: number;
+  pendingLeaveRequests: number;
   registrationsByDate: Record<string, number>;
 }
 
@@ -74,15 +75,16 @@ export default function AdminDashboard() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
           <StatCard title="Total Employees" value={stats?.totalEmployees || 0} color="blue" />
           <StatCard title="Active Employees" value={stats?.activeEmployees || 0} color="green" />
           <StatCard title="Pending Approvals" value={stats?.pendingEmployees || 0} color="yellow" />
           <StatCard title="Pending Reset Requests" value={stats?.pendingResetRequests || 0} color="orange" />
+          <StatCard title="Pending Leave Requests" value={stats?.pendingLeaveRequests || 0} color="purple" />
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <ActionCard
             title="User Management"
             description="View and manage employee accounts"
@@ -92,6 +94,11 @@ export default function AdminDashboard() {
             title="Password Reset Requests"
             description="Review and process password reset requests"
             href="/admin/reset-requests"
+          />
+          <ActionCard
+            title="Leave Requests"
+            description="Review and approve/reject leave requests"
+            href="/admin/leave-requests"
           />
         </div>
 
@@ -125,6 +132,7 @@ function StatCard({ title, value, color }: { title: string; value: number; color
     green: 'bg-green-600',
     yellow: 'bg-yellow-600',
     orange: 'bg-orange-600',
+    purple: 'bg-purple-600',
   };
 
   return (
