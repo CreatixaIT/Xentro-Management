@@ -481,11 +481,7 @@ export default function AttendancePage() {
                   {sessions.map((session) => (
                     <tr key={session.id} className="border-b border-gray-100 hover:bg-gray-50">
                       <td className="px-4 py-3 text-sm text-gray-700">
-                        {new Date(session.business_date).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}
+                        {session.business_date}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-700">
                         {session.sign_in_time ? formatTime(session.sign_in_time) : '—'}

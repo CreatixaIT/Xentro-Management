@@ -48,16 +48,21 @@ export async function POST(req: Request) {
       );
     }
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    // Parse YYYY-MM-DD strings directly (timezone-neutral)
+    const [startYear, startMonth, startDay] = startDate.split('-').map(Number);
+    const [endYear, endMonth, endDay] = endDate.split('-').map(Number);
     const trimmedReason = reason.trim();
 
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+    if (!startYear || !startMonth || !startDay || !endYear || !endMonth || !endDay) {
       return NextResponse.json(
-        { error: 'Invalid date format' },
+        { error: 'Invalid date format. Use YYYY-MM-DD' },
         { status: 400 }
       );
     }
+
+    // Convert to Date objects for comparison (treated as UTC midnight to avoid timezone shifts)
+    const start = new Date(Date.UTC(startYear, startMonth - 1, startDay));
+    const end = new Date(Date.UTC(endYear, endMonth - 1, endDay));
 
     if (end < start) {
       return NextResponse.json(
@@ -67,9 +72,13 @@ export async function POST(req: Request) {
     }
 
     // Check if start date is in the past using Asia/Dhaka timezone
-    const todayDhaka = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }));
-    todayDhaka.setHours(0, 0, 0, 0);
-    if (start.getTime() < todayDhaka.getTime()) {
+    // Get today's date in Asia/Dhaka as YYYY-MM-DD
+    const now = new Date();
+    const dhakaDateStr = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Dhaka' }); // en-CA gives YYYY-MM-DD
+    const [todayYear, todayMonth, todayDay] = dhakaDateStr.split('-').map(Number);
+    const todayDhaka = new Date(Date.UTC(todayYear, todayMonth - 1, todayDay));
+
+    if (start < todayDhaka) {
       return NextResponse.json(
         { error: 'Cannot request leave for past dates' },
         { status: 400 }

@@ -116,11 +116,20 @@ REVOKE EXECUTE ON FUNCTION public.check_overlapping_leave_requests(UUID, DATE, D
 GRANT EXECUTE ON FUNCTION public.check_overlapping_leave_requests(UUID, DATE, DATE, UUID) TO authenticated;
 
 -- Trigger function to prevent overlapping leave requests on insert
+-- Uses advisory lock for concurrency safety
 CREATE OR REPLACE FUNCTION prevent_overlapping_leave_requests()
 RETURNS TRIGGER AS $$
 DECLARE
   v_has_overlap BOOLEAN;
+  v_lock_key BIGINT;
 BEGIN
+  -- Acquire advisory lock on profile_id to prevent concurrent overlapping inserts
+  -- Convert UUID to BIGINT for lock key (use first 8 bytes)
+  v_lock_key := ('x' || substring(NEW.profile_id::text, 2, 16))::bigint;
+  
+  -- Try to acquire lock (non-blocking, wait up to 5 seconds)
+  PERFORM pg_advisory_xact_lock(v_lock_key);
+  
   -- Check for overlapping requests (excluding this one on update)
   SELECT check_overlapping_leave_requests(
     NEW.profile_id,

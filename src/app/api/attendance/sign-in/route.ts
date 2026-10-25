@@ -10,16 +10,13 @@ export async function POST() {
   }
 
   try {
-    // Create new attendance record for today (database will set time_in via default)
-    // We need to specify business_date for the unique constraint to work
-    const todayDhaka = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }));
-    const businessDate = todayDhaka.toISOString().split('T')[0];
-
+    // Create new attendance record for today
+    // Database will set time_in via default NOW()
+    // Database trigger will derive business_date from time_in in Asia/Dhaka
     const { data: attendance, error } = await supabase
       .from('attendance')
       .insert({
         profile_id: user.id,
-        business_date: businessDate,
         status: 'PRESENT',
       })
       .select()

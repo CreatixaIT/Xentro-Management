@@ -131,10 +131,17 @@ BEGIN
   END IF;
 
   -- Update the record with sign-out time (trigger will calculate duration)
+  -- Use time_out IS NULL to prevent concurrent sign-out overwrites
   UPDATE public.attendance
   SET time_out = now()
   WHERE id = v_attendance_id
-  AND profile_id = p_profile_id;
+  AND profile_id = p_profile_id
+  AND time_out IS NULL;
+
+  -- Check if the update actually happened (detect concurrent sign-out)
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Attendance already signed out or record modified by another request';
+  END IF;
 
   -- Return the updated record
   RETURN QUERY
@@ -169,6 +176,7 @@ CREATE POLICY "Employees can create own attendance"
   );
 
 -- Update RLS policy to prevent updating attendance after sign-out
+-- Note: Direct table updates should use the sign_out_attendance() RPC function
 DROP POLICY IF EXISTS "Employees can update own attendance" ON public.attendance;
 
 CREATE POLICY "Employees can update own attendance"
@@ -178,14 +186,17 @@ CREATE POLICY "Employees can update own attendance"
   USING (
     profile_id = auth.uid()
     AND time_out IS NULL  -- Can only update before sign-out
+    AND time_in IS NOT NULL  -- Must have time_in
   )
   WITH CHECK (
     profile_id = auth.uid()
     AND time_out IS NOT NULL  -- Must be signing out
     AND time_out >= time_in  -- Cannot sign out before sign in
+    AND time_out = now()  -- Must use current database time (cannot fabricate)
   );
 
 -- Prevent direct manipulation of critical fields via database trigger
+-- This validates timestamps but does NOT interfere with duration calculation
 CREATE OR REPLACE FUNCTION prevent_attendance_timestamp_manipulation()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -199,10 +210,8 @@ BEGIN
     RAISE EXCEPTION 'Cannot modify business_date';
   END IF;
   
-  -- Prevent manually setting duration
-  IF (TG_OP = 'INSERT' OR TG_OP = 'UPDATE') AND NEW.work_duration_minutes IS NOT NULL THEN
-    NEW.work_duration_minutes := NULL;  -- Always let trigger calculate it
-  END IF;
+  -- Note: duration is calculated by calculate_attendance_duration_trigger
+  -- We do NOT reset it here to avoid interfering with that trigger
   
   RETURN NEW;
 END;
