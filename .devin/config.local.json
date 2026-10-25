@@ -21,7 +21,13 @@
       "Exec(cat)",
       "Exec(kill)",
       "Exec(git remote)",
-      "Exec(git fetch)"
+      "Exec(git fetch)",
+      "Exec(git push)",
+      "Exec(git ls-remote)",
+      "Exec(npm test)",
+      "Exec(git restore)",
+      "Exec(SUPERADMIN_PASSCODE=924040 npm run)",
+      "Exec(source)"
     ]
   }
 }
