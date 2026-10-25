@@ -18,7 +18,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Photo path is required' }, { status: 400 });
   }
 
-  const { data: url, error } = await supabase
+  const { data, error } = await supabase
     .storage
     .from('inventory-photos')
     .createSignedUrl(photoPath, 3600); // 1 hour
@@ -30,11 +30,12 @@ export async function GET(request: Request) {
   }
 
   console.log('Photo URL generated successfully for:', photoPath);
-  console.log('Response data type:', typeof url);
-  console.log('Response data keys:', url ? Object.keys(url) : 'null');
+  console.log('Response data type:', typeof data);
+  console.log('Response data keys:', data ? Object.keys(data) : 'null');
   
-  // Supabase returns { signedUrl, expiresIn }, extract just the signedUrl string
-  const signedUrl = url?.signedUrl;
+  // Supabase createSignedUrl returns data with signedUrl property
+  // Response shape: { signedUrl: string, expiresIn: number }
+  const signedUrl = data?.signedUrl;
   console.log('Extracted signedUrl type:', typeof signedUrl);
   console.log('Is signedUrl a string:', typeof signedUrl === 'string');
   
