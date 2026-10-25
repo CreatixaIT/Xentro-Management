@@ -10,49 +10,75 @@ export async function POST() {
   }
 
   try {
-    // Get current open session
-    const { data: openSession, error: rpcError } = await supabase
-      .rpc('get_current_open_session', { p_profile_id: user.id });
+    // Get today's business date in Asia/Dhaka
+    const todayDhaka = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }));
+    const businessDate = todayDhaka.toISOString().split('T')[0];
 
-    if (rpcError) {
-      console.error('RPC error checking open session:', rpcError);
-      return NextResponse.json({ error: 'Failed to check session status' }, { status: 500 });
+    // Get today's attendance record
+    const { data: attendance, error: fetchError } = await supabase
+      .from('attendance')
+      .select('*')
+      .eq('profile_id', user.id)
+      .eq('business_date', businessDate)
+      .single();
+
+    if (fetchError) {
+      console.error('Error fetching attendance:', fetchError);
+      if (fetchError.code === 'PGRST116') {
+        return NextResponse.json(
+          { error: 'No attendance record found for today. Please sign in first.' },
+          { status: 400 }
+        );
+      }
+      return NextResponse.json({ error: 'Failed to fetch attendance' }, { status: 500 });
     }
 
-    if (!openSession || openSession.length === 0) {
+    if (!attendance) {
       return NextResponse.json(
-        { error: 'No open session found. Please sign in first.' },
+        { error: 'No attendance record found for today. Please sign in first.' },
         { status: 400 }
       );
     }
 
-    // Handle renamed return columns from RPC function
-    const sessionId = openSession[0].session_id || openSession[0].id;
+    if (!attendance.time_in) {
+      return NextResponse.json(
+        { error: 'No sign-in time found. Please sign in first.' },
+        { status: 400 }
+      );
+    }
 
-    // Close the session (database will set sign_out_time via default)
-    const { data: session, error } = await supabase
-      .from('attendance_sessions')
+    if (attendance.time_out) {
+      return NextResponse.json(
+        { error: 'You have already signed out today.' },
+        { status: 400 }
+      );
+    }
+
+    // Sign out - set time_out (database will set it via default, trigger will calculate duration)
+    const { data: updatedAttendance, error: updateError } = await supabase
+      .from('attendance')
       .update({
-        sign_out_time: new Date().toISOString(),
+        time_out: new Date().toISOString(),
       })
-      .eq('id', sessionId)
-      .eq('profile_id', user.id) // Ensure user can only close their own session
+      .eq('id', attendance.id)
+      .eq('profile_id', user.id) // Ensure user can only update their own record
       .select()
       .single();
 
-    if (error) {
-      console.error('Sign-out error:', error);
+    if (updateError) {
+      console.error('Sign-out error:', updateError);
       return NextResponse.json({ error: 'Failed to sign out' }, { status: 500 });
     }
 
     return NextResponse.json({
       success: true,
-      session: {
-        id: session.id,
-        sign_in_time: session.sign_in_time,
-        sign_out_time: session.sign_out_time,
-        business_date: session.business_date,
-        duration_minutes: session.duration_minutes,
+      attendance: {
+        id: updatedAttendance.id,
+        time_in: updatedAttendance.time_in,
+        time_out: updatedAttendance.time_out,
+        business_date: updatedAttendance.business_date,
+        work_duration_minutes: updatedAttendance.work_duration_minutes,
+        status: updatedAttendance.status,
       },
     });
   } catch (error) {

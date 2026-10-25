@@ -15,10 +15,10 @@ export async function GET(request: Request) {
 
   try {
     let query = supabase
-      .from('attendance_sessions')
+      .from('attendance')
       .select('*')
       .eq('profile_id', user.id)
-      .order('sign_in_time', { ascending: false });
+      .order('business_date', { ascending: false });
 
     if (startDate) {
       query = query.gte('business_date', startDate);
@@ -28,23 +28,46 @@ export async function GET(request: Request) {
       query = query.lte('business_date', endDate);
     }
 
-    const { data: sessions, error } = await query;
+    const { data: attendanceRecords, error } = await query;
 
     if (error) {
-      console.error('Fetch sessions error:', error);
-      return NextResponse.json({ error: 'Failed to fetch sessions' }, { status: 500 });
+      console.error('Fetch attendance error:', error);
+      return NextResponse.json({ error: 'Failed to fetch attendance' }, { status: 500 });
     }
 
-    // Get current open session
-    const { data: openSession } = await supabase
-      .rpc('get_current_open_session', { p_profile_id: user.id });
+    // Get today's attendance
+    const todayDhaka = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }));
+    const businessDate = todayDhaka.toISOString().split('T')[0];
+
+    const { data: todayAttendance, error: todayError } = await supabase
+      .from('attendance')
+      .select('*')
+      .eq('profile_id', user.id)
+      .eq('business_date', businessDate)
+      .single();
+
+    // Map attendance records to session-like format for frontend compatibility
+    const sessions = (attendanceRecords || []).map(record => ({
+      id: record.id,
+      profile_id: record.profile_id,
+      sign_in_time: record.time_in,
+      sign_out_time: record.time_out,
+      business_date: record.business_date,
+      duration_minutes: record.work_duration_minutes,
+      created_at: record.created_at,
+      updated_at: record.updated_at,
+    }));
 
     return NextResponse.json({
-      sessions: sessions || [],
-      currentSession: openSession && openSession.length > 0 ? openSession[0] : null,
+      sessions,
+      currentSession: todayAttendance && !todayAttendance.time_out ? {
+        id: todayAttendance.id,
+        sign_in_time: todayAttendance.time_in,
+        business_date: todayAttendance.business_date,
+      } : null,
     });
   } catch (error) {
-    console.error('Fetch sessions error:', error);
+    console.error('Fetch attendance error:', error);
     return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
 }

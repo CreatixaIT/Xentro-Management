@@ -235,6 +235,31 @@ export default function AttendancePage() {
     return `${hours}h ${mins}m`;
   };
 
+  // Check if selected date is today
+  const isToday = (): boolean => {
+    const todayDhaka = toDhakaDate(new Date());
+    const selectedDhaka = toDhakaDate(selectedDate);
+    return (
+      todayDhaka.getFullYear() === selectedDhaka.getFullYear() &&
+      todayDhaka.getMonth() === selectedDhaka.getMonth() &&
+      todayDhaka.getDate() === selectedDhaka.getDate()
+    );
+  };
+
+  // Check if attendance is completed for selected date
+  const isAttendanceCompleted = (): boolean => {
+    const selectedBusinessDate = formatDate(selectedDate);
+    const todaysAttendance = sessions.find(s => s.business_date === selectedBusinessDate);
+    return !!(todaysAttendance && todaysAttendance.sign_out_time);
+  };
+
+  // Check if signed in for selected date
+  const isSignedIn = (): boolean => {
+    const selectedBusinessDate = formatDate(selectedDate);
+    const todaysAttendance = sessions.find(s => s.business_date === selectedBusinessDate);
+    return !!(todaysAttendance && todaysAttendance.sign_in_time && !todaysAttendance.sign_out_time);
+  };
+
   // Calculate total duration for displayed sessions
   const getTotalDuration = () => {
     const completedSessions = sessions.filter(s => s.sign_out_time);
@@ -352,20 +377,27 @@ export default function AttendancePage() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h2 className="text-lg font-semibold text-gray-900">
-                {currentSession ? 'Currently Signed In' : 'Not Signed In'}
+                {isToday() && isSignedIn() ? 'Currently Signed In' : 
+                 isToday() && isAttendanceCompleted() ? 'Attendance Completed' :
+                 isToday() ? 'Not Signed In' : 'Viewing History'}
               </h2>
-              {currentSession && (
+              {isToday() && isSignedIn() && currentSession && (
                 <p className="text-sm text-gray-600">
-                  Since {formatTime(currentSession.sign_in_time)}
+                  Signed in at {formatTime(currentSession.sign_in_time)}
+                </p>
+              )}
+              {isToday() && isAttendanceCompleted() && (
+                <p className="text-sm text-gray-600">
+                  Attendance completed for today
                 </p>
               )}
             </div>
             <div className="flex gap-3">
               <button
                 onClick={handleSignIn}
-                disabled={!!currentSession || signingIn || signingOut}
+                disabled={!isToday() || isSignedIn() || isAttendanceCompleted() || signingIn || signingOut}
                 className={`px-6 py-3 rounded-lg font-medium transition-colors ${
-                  currentSession || signingIn || signingOut
+                  !isToday() || isSignedIn() || isAttendanceCompleted() || signingIn || signingOut
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     : 'bg-green-500 hover:bg-green-600 text-white'
                 }`}
@@ -374,9 +406,9 @@ export default function AttendancePage() {
               </button>
               <button
                 onClick={handleSignOut}
-                disabled={!currentSession || signingIn || signingOut}
+                disabled={!isToday() || !isSignedIn() || signingIn || signingOut}
                 className={`px-6 py-3 rounded-lg font-medium transition-colors ${
-                  !currentSession || signingIn || signingOut
+                  !isToday() || !isSignedIn() || signingIn || signingOut
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     : 'bg-red-500 hover:bg-red-600 text-white'
                 }`}
@@ -397,9 +429,9 @@ export default function AttendancePage() {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Summary</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-white/50 rounded-xl p-4">
-              <p className="text-sm text-gray-600">Total Sessions</p>
+              <p className="text-sm text-gray-600">Days with Attendance</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
-                {sessions.filter(s => s.sign_out_time).length}
+                {sessions.length}
               </p>
             </div>
             <div className="bg-white/50 rounded-xl p-4">
@@ -407,9 +439,9 @@ export default function AttendancePage() {
               <p className="text-2xl font-bold text-gray-900 mt-1">{getTotalDuration()}</p>
             </div>
             <div className="bg-white/50 rounded-xl p-4">
-              <p className="text-sm text-gray-600">Days with Attendance</p>
+              <p className="text-sm text-gray-600">Completed Days</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
-                {new Set(sessions.map(s => s.business_date)).size}
+                {sessions.filter(s => s.sign_out_time).length}
               </p>
             </div>
             <div className="bg-white/50 rounded-xl p-4">
@@ -456,21 +488,23 @@ export default function AttendancePage() {
                         })}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-700">
-                        {formatTime(session.sign_in_time)}
+                        {session.sign_in_time ? formatTime(session.sign_in_time) : '—'}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-700">
                         {session.sign_out_time ? formatTime(session.sign_out_time) : '—'}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-700">
-                        {formatDuration(session.duration_minutes)}
+                        {session.sign_out_time ? formatDuration(session.duration_minutes) : '—'}
                       </td>
                       <td className="px-4 py-3 text-sm">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          session.sign_out_time
+                          !session.sign_in_time
+                            ? 'bg-gray-100 text-gray-700'
+                          : session.sign_out_time
                             ? 'bg-green-100 text-green-700'
                             : 'bg-yellow-100 text-yellow-700'
                         }`}>
-                          {session.sign_out_time ? 'Completed' : 'In Progress'}
+                          {!session.sign_in_time ? 'Absent' : session.sign_out_time ? 'Completed' : 'In Progress'}
                         </span>
                       </td>
                     </tr>

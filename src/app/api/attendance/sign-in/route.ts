@@ -10,27 +10,46 @@ export async function POST() {
   }
 
   try {
-    // Check if user has an open session
-    const { data: openSession, error: rpcError } = await supabase
-      .rpc('get_current_open_session', { p_profile_id: user.id });
+    // Get today's business date in Asia/Dhaka
+    const todayDhaka = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }));
+    const businessDate = todayDhaka.toISOString().split('T')[0];
 
-    if (rpcError) {
-      console.error('RPC error checking open session:', rpcError);
-      return NextResponse.json({ error: 'Failed to check session status' }, { status: 500 });
+    // Check if employee already has attendance for today
+    const { data: existingAttendance, error: checkError } = await supabase
+      .from('attendance')
+      .select('*')
+      .eq('profile_id', user.id)
+      .eq('business_date', businessDate)
+      .single();
+
+    if (checkError && checkError.code !== 'PGRST116') {
+      // PGRST116 means no rows found, which is expected for new attendance
+      console.error('Error checking existing attendance:', checkError);
+      return NextResponse.json({ error: 'Failed to check attendance status' }, { status: 500 });
     }
 
-    if (openSession && openSession.length > 0) {
-      return NextResponse.json(
-        { error: 'You already have an open session. Please sign out first.' },
-        { status: 400 }
-      );
+    if (existingAttendance) {
+      // Already has attendance for today
+      if (existingAttendance.time_out) {
+        return NextResponse.json(
+          { error: 'You have already completed attendance for today.' },
+          { status: 400 }
+        );
+      } else {
+        return NextResponse.json(
+          { error: 'You have already signed in today.' },
+          { status: 400 }
+        );
+      }
     }
 
-    // Create new attendance session (database will set sign_in_time via default)
-    const { data: session, error } = await supabase
-      .from('attendance_sessions')
+    // Create new attendance record for today (database will set time_in via default)
+    const { data: attendance, error } = await supabase
+      .from('attendance')
       .insert({
         profile_id: user.id,
+        business_date: businessDate,
+        status: 'PRESENT',
       })
       .select()
       .single();
@@ -38,9 +57,9 @@ export async function POST() {
     if (error) {
       console.error('Sign-in error:', error);
       if (error.code === '23505') {
-        // Unique constraint violation - already has open session
+        // Unique constraint violation - already has attendance for today
         return NextResponse.json(
-          { error: 'You already have an open session. Please sign out first.' },
+          { error: 'You have already signed in today.' },
           { status: 400 }
         );
       }
@@ -49,10 +68,11 @@ export async function POST() {
 
     return NextResponse.json({
       success: true,
-      session: {
-        id: session.id,
-        sign_in_time: session.sign_in_time,
-        business_date: session.business_date,
+      attendance: {
+        id: attendance.id,
+        time_in: attendance.time_in,
+        business_date: attendance.business_date,
+        status: attendance.status,
       },
     });
   } catch (error) {
