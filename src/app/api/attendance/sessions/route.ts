@@ -35,9 +35,9 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Failed to fetch attendance' }, { status: 500 });
     }
 
-    // Get today's attendance
-    const todayDhaka = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }));
-    const businessDate = todayDhaka.toISOString().split('T')[0];
+    // Get today's attendance using stable YYYY-MM-DD format in Asia/Dhaka
+    const now = new Date();
+    const businessDate = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Dhaka' }); // en-CA gives YYYY-MM-DD
 
     const { data: todayAttendance, error: todayError } = await supabase
       .from('attendance')

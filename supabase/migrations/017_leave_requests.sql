@@ -123,13 +123,18 @@ DECLARE
   v_has_overlap BOOLEAN;
   v_lock_key BIGINT;
 BEGIN
+  -- Only check for overlaps on INSERT or when not cancelling/rejecting
+  IF TG_OP = 'UPDATE' AND NEW.status IN ('CANCELLED', 'REJECTED') THEN
+    RETURN NEW;
+  END IF;
+
   -- Acquire advisory lock on profile_id to prevent concurrent overlapping inserts
-  -- Convert UUID to BIGINT for lock key (use first 8 bytes)
-  v_lock_key := ('x' || substring(NEW.profile_id::text, 2, 16))::bigint;
-  
-  -- Try to acquire lock (non-blocking, wait up to 5 seconds)
+  -- Use hashtextextended for deterministic 64-bit hash of UUID
+  v_lock_key := hashtextextended(NEW.profile_id::text, 0);
+
+  -- Try to acquire lock (transaction-scoped, waits until available)
   PERFORM pg_advisory_xact_lock(v_lock_key);
-  
+
   -- Check for overlapping requests (excluding this one on update)
   SELECT check_overlapping_leave_requests(
     NEW.profile_id,

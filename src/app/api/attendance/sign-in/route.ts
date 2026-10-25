@@ -10,43 +10,35 @@ export async function POST() {
   }
 
   try {
-    // Create new attendance record for today
-    // Database will set time_in via default NOW()
-    // Database trigger will derive business_date from time_in in Asia/Dhaka
-    const { data: attendance, error } = await supabase
-      .from('attendance')
-      .insert({
-        profile_id: user.id,
-        status: 'PRESENT',
-      })
-      .select()
-      .single();
+    // Use database function to sign in (generates timestamp server-side)
+    const { data: attendance, error: rpcError } = await supabase
+      .rpc('sign_in_attendance', { p_profile_id: user.id });
 
-    if (error) {
-      console.error('Sign-in error:', error);
-      if (error.code === '23505') {
-        // Unique constraint violation - already has attendance for today
+    if (rpcError) {
+      console.error('Sign-in RPC error:', rpcError);
+      if (rpcError.message && rpcError.message.includes('already exists')) {
         return NextResponse.json(
           { error: 'You have already signed in today.' },
-          { status: 400 }
-        );
-      }
-      if (error.message && error.message.includes('past attendance')) {
-        return NextResponse.json(
-          { error: 'Cannot create attendance for past dates.' },
           { status: 400 }
         );
       }
       return NextResponse.json({ error: 'Failed to sign in' }, { status: 500 });
     }
 
+    if (!attendance || attendance.length === 0) {
+      return NextResponse.json(
+        { error: 'Failed to sign in' },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json({
       success: true,
       attendance: {
-        id: attendance.id,
-        time_in: attendance.time_in,
-        business_date: attendance.business_date,
-        status: attendance.status,
+        id: attendance[0].attendance_id,
+        time_in: attendance[0].attendance_time_in,
+        business_date: attendance[0].attendance_business_date,
+        status: attendance[0].attendance_status,
       },
     });
   } catch (error) {

@@ -18,8 +18,9 @@ SECURITY DEFINER
 SET search_path = public;
 
 CREATE TRIGGER set_attendance_business_date_trigger
-  BEFORE INSERT OR UPDATE OF time_in ON public.attendance
+  BEFORE INSERT OR UPDATE ON public.attendance
   FOR EACH ROW
+  WHEN (NEW.business_date IS NULL)
   EXECUTE FUNCTION set_attendance_business_date();
 
 -- Drop existing duration trigger if it exists
@@ -103,6 +104,7 @@ RETURNS TABLE (
   attendance_id UUID,
   attendance_time_in TIMESTAMPTZ,
   attendance_time_out TIMESTAMPTZ,
+  attendance_business_date DATE,
   attendance_duration_minutes INTEGER,
   attendance_status TEXT
 ) AS $$
@@ -149,6 +151,7 @@ BEGIN
     a.id AS attendance_id,
     a.time_in AS attendance_time_in,
     a.time_out AS attendance_time_out,
+    a.business_date AS attendance_business_date,
     a.work_duration_minutes AS attendance_duration_minutes,
     a.status AS attendance_status
   FROM public.attendance a
@@ -162,38 +165,84 @@ SET search_path = public;
 REVOKE EXECUTE ON FUNCTION public.sign_out_attendance(UUID) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.sign_out_attendance(UUID) TO authenticated;
 
+-- Function to sign in for today's attendance
+CREATE OR REPLACE FUNCTION sign_in_attendance(p_profile_id UUID)
+RETURNS TABLE (
+  attendance_id UUID,
+  attendance_time_in TIMESTAMPTZ,
+  attendance_time_out TIMESTAMPTZ,
+  attendance_business_date DATE,
+  attendance_duration_minutes INTEGER,
+  attendance_status TEXT
+) AS $$
+DECLARE
+  v_today_date DATE;
+  v_attendance_id UUID;
+BEGIN
+  -- Validate that the caller is signing in their own attendance
+  IF auth.uid() IS DISTINCT FROM p_profile_id THEN
+    RAISE EXCEPTION 'Unauthorized: can only sign in own attendance';
+  END IF;
+
+  -- Calculate today's business date in Asia/Dhaka for duplicate check
+  v_today_date := (now() AT TIME ZONE 'Asia/Dhaka')::date;
+
+  -- Check if attendance already exists for today
+  SELECT id INTO v_attendance_id
+  FROM public.attendance
+  WHERE profile_id = p_profile_id
+  AND business_date = v_today_date
+  LIMIT 1;
+
+  IF v_attendance_id IS NOT NULL THEN
+    RAISE EXCEPTION 'Attendance already exists for today';
+  END IF;
+
+  -- Insert new attendance record with database-generated time_in
+  -- Trigger will derive business_date from time_in in Asia/Dhaka
+  INSERT INTO public.attendance (profile_id, time_in, time_out, work_duration_minutes, status)
+  VALUES (p_profile_id, now(), NULL, NULL, 'PRESENT')
+  RETURNING id INTO v_attendance_id;
+
+  -- Return the created record
+  RETURN QUERY
+  SELECT
+    a.id AS attendance_id,
+    a.time_in AS attendance_time_in,
+    a.time_out AS attendance_time_out,
+    a.business_date AS attendance_business_date,
+    a.work_duration_minutes AS attendance_duration_minutes,
+    a.status AS attendance_status
+  FROM public.attendance a
+  WHERE a.id = v_attendance_id;
+END;
+$$ LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public;
+
+-- Grant execution to authenticated role only
+REVOKE EXECUTE ON FUNCTION public.sign_in_attendance(UUID) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.sign_in_attendance(UUID) TO authenticated;
+
 -- Update RLS policy to prevent creating attendance for past dates
+-- Note: Direct INSERT by authenticated users is denied - must use sign_in_attendance() RPC
 DROP POLICY IF EXISTS "Employees can create own attendance" ON public.attendance;
 
 CREATE POLICY "Employees can create own attendance"
   ON public.attendance
   FOR INSERT
   TO authenticated
-  WITH CHECK (
-    profile_id = auth.uid()
-    AND business_date >= (now() AT TIME ZONE 'Asia/Dhaka')::date  -- Cannot create past attendance
-    AND time_in IS NOT NULL  -- Must have time_in
-  );
+  WITH CHECK (false);  -- Deny direct INSERT, use sign_in_attendance() RPC function
 
 -- Update RLS policy to prevent updating attendance after sign-out
--- Note: Direct table updates should use the sign_out_attendance() RPC function
+-- Note: Direct UPDATE by authenticated users is denied - must use sign_out_attendance() RPC
 DROP POLICY IF EXISTS "Employees can update own attendance" ON public.attendance;
 
 CREATE POLICY "Employees can update own attendance"
   ON public.attendance
   FOR UPDATE
   TO authenticated
-  USING (
-    profile_id = auth.uid()
-    AND time_out IS NULL  -- Can only update before sign-out
-    AND time_in IS NOT NULL  -- Must have time_in
-  )
-  WITH CHECK (
-    profile_id = auth.uid()
-    AND time_out IS NOT NULL  -- Must be signing out
-    AND time_out >= time_in  -- Cannot sign out before sign in
-    AND time_out = now()  -- Must use current database time (cannot fabricate)
-  );
+  WITH CHECK (false);  -- Deny direct UPDATE, use sign_out_attendance() RPC function
 
 -- Prevent direct manipulation of critical fields via database trigger
 -- This validates timestamps but does NOT interfere with duration calculation

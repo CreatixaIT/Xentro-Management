@@ -38,7 +38,7 @@ export async function POST() {
         id: attendance[0].attendance_id,
         time_in: attendance[0].attendance_time_in,
         time_out: attendance[0].attendance_time_out,
-        business_date: formatDate(new Date()), // Will be set by database
+        business_date: attendance[0].attendance_business_date, // Use database business_date
         work_duration_minutes: attendance[0].attendance_duration_minutes,
         status: attendance[0].attendance_status,
       },
@@ -47,12 +47,4 @@ export async function POST() {
     console.error('Sign-out error:', error);
     return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
-}
-
-// Helper function to format date as YYYY-MM-DD
-function formatDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
 }
