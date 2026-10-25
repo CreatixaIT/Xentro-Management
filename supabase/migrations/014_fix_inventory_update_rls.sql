@@ -1,5 +1,6 @@
--- Ensure authenticated users can update inventory
--- This migration fixes the UPDATE RLS policy that may be blocking edits
+-- Fix the UPDATE RLS policy for inventory
+-- The policy has qual = null which means USING is null instead of true
+-- This causes UPDATE to fail even with WITH CHECK = true
 
 DROP POLICY IF EXISTS "Authenticated users can update inventory" ON public.inventory;
 

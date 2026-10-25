@@ -37,7 +37,21 @@ export async function PATCH(
   console.log('ID length:', id?.length);
   console.log('Is valid UUID:', /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id));
   console.log('Authenticated user ID:', user.id);
+  console.log('User email:', user.email);
+  console.log('User role:', user.role);
   console.log('Request body keys:', Object.keys(body));
+  console.log('=======================');
+
+  // Test: Can we query the item with SELECT?
+  console.log('Testing SELECT with same ID...');
+  const { data: testItem, error: testError } = await supabase
+    .from('inventory')
+    .select('id, name')
+    .eq('id', id)
+    .maybeSingle();
+  
+  console.log('SELECT test result:', testItem);
+  console.log('SELECT test error:', testError);
   console.log('=======================');
 
   // Validation
