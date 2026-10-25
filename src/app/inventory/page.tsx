@@ -136,25 +136,30 @@ export default function InventoryPage() {
     if (response.ok && result.inventory) {
       setInventory(result.inventory);
       
-      console.log('=== PHOTO URL FETCHING ===');
-      console.log('Total inventory items:', result.inventory.length);
-      console.log('Items with photo_path:', result.inventory.filter((item: InventoryItem) => item.photo_path).length);
-      
       // Fetch signed URLs for photos
       const photoPromises = result.inventory
         .filter((item: InventoryItem) => item.photo_path)
         .map(async (item: InventoryItem) => {
           try {
-            console.log('Fetching URL for item:', item.id, 'photo_path:', item.photo_path);
             const photoResponse = await fetch(`/api/inventory/photo-url?path=${encodeURIComponent(item.photo_path!)}`);
             const photoResult = await photoResponse.json();
-            console.log('Photo URL response status:', photoResponse.status);
-            console.log('Photo URL result:', photoResult);
-            if (photoResponse.ok && photoResult.url) {
-              console.log('Successfully got URL for item:', item.id);
-              return { id: item.id, url: photoResult.url };
+            
+            // Extract the actual URL string from the response
+            let url: string | null = null;
+            if (photoResult.url) {
+              // If url is a string, use it directly
+              if (typeof photoResult.url === 'string') {
+                url = photoResult.url;
+              }
+              // If url is an object with signedUrl property, extract it
+              else if (photoResult.url.signedUrl) {
+                url = photoResult.url.signedUrl;
+              }
             }
-            console.error('Failed to get URL for item:', item.id, 'status:', photoResponse.status);
+            
+            if (url && photoResponse.ok) {
+              return { id: item.id, url };
+            }
             return null;
           } catch (error) {
             console.error('Failed to fetch photo URL for item:', item.id, error);
@@ -169,8 +174,6 @@ export default function InventoryPage() {
           urlMap[result.id] = result.url;
         }
       });
-      console.log('Photo URLs map:', urlMap);
-      console.log('==========================');
       setPhotoUrls(urlMap);
     } else {
       setInventory([]);
@@ -340,8 +343,18 @@ export default function InventoryPage() {
     const response = await fetch(`/api/inventory/photo-url?path=${encodeURIComponent(photoPath)}`);
     const result = await response.json();
     
-    if (response.ok && result.url) {
-      setCurrentPhotoUrl(result.url);
+    // Extract the actual URL string from the response
+    let url: string | null = null;
+    if (result.url) {
+      if (typeof result.url === 'string') {
+        url = result.url;
+      } else if (result.url.signedUrl) {
+        url = result.url.signedUrl;
+      }
+    }
+    
+    if (response.ok && url) {
+      setCurrentPhotoUrl(url);
       setPhotoViewerOpen(true);
     } else {
       alert('Failed to load photo');
@@ -621,7 +634,6 @@ export default function InventoryPage() {
                             <button
                               onClick={() => item.photo_path && openPhotoViewer(item.photo_path)}
                               className="cursor-pointer"
-                              disabled={!photoUrls[item.id]}
                             >
                               {photoUrls[item.id] ? (
                                 <img
@@ -629,12 +641,11 @@ export default function InventoryPage() {
                                   alt="Product"
                                   className="w-12 h-12 object-cover rounded-lg"
                                   onError={(e) => {
-                                    console.error('Failed to load image for item:', item.id);
                                     (e.target as HTMLImageElement).style.display = 'none';
                                   }}
                                 />
                               ) : (
-                                <span className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center text-gray-400 text-xs">Loading...</span>
+                                <span className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">—</span>
                               )}
                             </button>
                           )}
@@ -958,20 +969,12 @@ export default function InventoryPage() {
               >
                 ×
               </button>
-              {currentPhotoUrl ? (
+              {currentPhotoUrl && (
                 <img
                   src={currentPhotoUrl}
                   alt="Product photo"
                   className="max-w-full max-h-[85vh] object-contain rounded-lg"
-                  onError={(e) => {
-                    console.error('Failed to load image in viewer');
-                    (e.target as HTMLImageElement).style.display = 'none';
-                  }}
                 />
-              ) : (
-                <div className="w-64 h-64 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500">
-                  Loading image...
-                </div>
               )}
             </div>
           </div>

@@ -30,5 +30,6 @@ export async function GET(request: Request) {
   }
 
   console.log('Photo URL generated successfully for:', photoPath);
-  return NextResponse.json({ url });
+  // Supabase returns { signedUrl, expiresIn }, extract just the signedUrl string
+  return NextResponse.json({ url: url.signedUrl });
 }
