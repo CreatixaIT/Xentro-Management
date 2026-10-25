@@ -1,6 +1,12 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
+type PhotoUrlResponse = {
+  url: string;
+} | {
+  error: string;
+};
+
 export async function GET(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -12,8 +18,6 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const photoPath = searchParams.get('path');
 
-  console.log('Photo URL request for path:', photoPath);
-
   if (!photoPath) {
     return NextResponse.json({ error: 'Photo path is required' }, { status: 400 });
   }
@@ -24,25 +28,18 @@ export async function GET(request: Request) {
     .createSignedUrl(photoPath, 3600); // 1 hour
 
   if (error) {
-    console.error('Photo URL generation error:', error);
-    console.error('Error message:', error.message);
+    console.error('Photo URL generation error:', error.message);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  console.log('Photo URL generated successfully for:', photoPath);
-  console.log('Response data type:', typeof data);
-  console.log('Response data keys:', data ? Object.keys(data) : 'null');
-  
-  // Supabase createSignedUrl returns data with signedUrl property
-  // Response shape: { signedUrl: string, expiresIn: number }
+  // Supabase createSignedUrl returns { signedUrl: string, expiresIn: number }
   const signedUrl = data?.signedUrl;
-  console.log('Extracted signedUrl type:', typeof signedUrl);
-  console.log('Is signedUrl a string:', typeof signedUrl === 'string');
   
   if (!signedUrl || typeof signedUrl !== 'string') {
     console.error('Failed to extract signedUrl string from response');
     return NextResponse.json({ error: 'Failed to generate signed URL' }, { status: 500 });
   }
   
-  return NextResponse.json({ url: signedUrl });
+  const response: PhotoUrlResponse = { url: signedUrl };
+  return NextResponse.json(response);
 }

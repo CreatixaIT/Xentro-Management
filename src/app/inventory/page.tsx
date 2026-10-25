@@ -32,6 +32,14 @@ interface InventoryItem {
   creator: { username: string; full_name: string } | null;
 }
 
+interface PhotoUrlResponse {
+  url: string;
+}
+
+interface PhotoUrlErrorResponse {
+  error: string;
+}
+
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'
@@ -142,33 +150,12 @@ export default function InventoryPage() {
         .map(async (item: InventoryItem) => {
           try {
             const photoResponse = await fetch(`/api/inventory/photo-url?path=${encodeURIComponent(item.photo_path!)}`);
-            const photoResult = await photoResponse.json();
+            const photoResult: PhotoUrlResponse | PhotoUrlErrorResponse = await photoResponse.json();
             
-            console.log('Photo URL response for item', item.id, ':', photoResult);
-            console.log('Result.url type:', typeof photoResult.url);
-            console.log('Result.url value:', photoResult.url);
-            
-            // Extract the actual URL string from the response
-            let url: string | null = null;
-            if (photoResult.url) {
-              // If url is a string, use it directly
-              if (typeof photoResult.url === 'string') {
-                url = photoResult.url;
-                console.log('Using url as string');
-              }
-              // If url is an object with signedUrl property, extract it
-              else if (photoResult.url.signedUrl) {
-                url = photoResult.url.signedUrl;
-                console.log('Extracted signedUrl from object');
-              }
+            // API returns { url: string } on success
+            if (photoResponse.ok && 'url' in photoResult && typeof photoResult.url === 'string') {
+              return { id: item.id, url: photoResult.url };
             }
-            
-            console.log('Final extracted url for item', item.id, ':', url, typeof url);
-            
-            if (url && photoResponse.ok) {
-              return { id: item.id, url };
-            }
-            console.error('Failed to get valid URL for item:', item.id);
             return null;
           } catch (error) {
             console.error('Failed to fetch photo URL for item:', item.id, error);
@@ -350,25 +337,11 @@ export default function InventoryPage() {
     if (!photoPath) return;
     
     const response = await fetch(`/api/inventory/photo-url?path=${encodeURIComponent(photoPath)}`);
-    const result = await response.json();
+    const result: PhotoUrlResponse | PhotoUrlErrorResponse = await response.json();
     
-    console.log('Viewer photo URL response:', result);
-    console.log('Result.url type:', typeof result.url);
-    
-    // Extract the actual URL string from the response
-    let url: string | null = null;
-    if (result.url) {
-      if (typeof result.url === 'string') {
-        url = result.url;
-      } else if (result.url.signedUrl) {
-        url = result.url.signedUrl;
-      }
-    }
-    
-    console.log('Viewer final extracted url:', url, typeof url);
-    
-    if (response.ok && url) {
-      setCurrentPhotoUrl(url);
+    // API returns { url: string } on success
+    if (response.ok && 'url' in result && typeof result.url === 'string') {
+      setCurrentPhotoUrl(result.url);
       setPhotoViewerOpen(true);
     } else {
       alert('Failed to load photo');
