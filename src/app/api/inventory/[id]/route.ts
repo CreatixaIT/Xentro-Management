@@ -94,26 +94,7 @@ export async function PATCH(
   console.log('Update data keys:', Object.keys(updateData));
   console.log('About to execute UPDATE query on inventory table');
 
-  // Diagnostic: Check if the item exists before update
-  console.log('Checking if item exists before update...');
-  const { data: checkItem, error: checkError } = await supabase
-    .from('inventory')
-    .select('id, name')
-    .eq('id', id)
-    .maybeSingle();
-
-  console.log('Pre-update check result:', checkItem);
-  console.log('Pre-update check error:', checkError);
-
-  if (checkError) {
-    console.error('Pre-update check failed:', checkError);
-  }
-
-  if (!checkItem) {
-    console.error('Item does not exist in database or SELECT RLS blocked access');
-  }
-
-  // Perform the update directly - if it fails, we'll get a clear error
+  // Perform the update with the authenticated client
   const { data: item, error } = await supabase
     .from('inventory')
     .update(updateData)
@@ -132,16 +113,6 @@ export async function PATCH(
     console.error('Error details:', error.details);
     console.error('Error hint:', error.hint);
     console.error('=========================');
-    
-    // If the error is about coercing to single JSON object, it means zero rows were updated
-    if (error.message.includes('Cannot coerce the result to a single JSON object')) {
-      console.error('Zero rows matched the UPDATE query');
-      return NextResponse.json({ 
-        error: 'Item not found or update not permitted',
-        code: error.code,
-        details: `No inventory record with ID ${id} found or RLS prevents update`,
-      }, { status: 404 });
-    }
     
     return NextResponse.json({ 
       error: `Update failed: ${error.message}`,
