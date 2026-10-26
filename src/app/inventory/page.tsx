@@ -79,6 +79,13 @@ export default function InventoryPage() {
   const [currentPhotoUrl, setCurrentPhotoUrl] = useState<string | null>(null);
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
   
+  // Success/confirmation dialogs
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  
   // Filters
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
@@ -263,6 +270,8 @@ export default function InventoryPage() {
       setShowAddModal(false);
       resetForm();
       fetchInventory();
+      setSuccessMessage('Item Added Successfully');
+      setShowSuccessPopup(true);
     }
     
     setSaving(false);
@@ -289,18 +298,35 @@ export default function InventoryPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this item?')) return;
+    setItemToDelete(id);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
     
-    const response = await fetch(`/api/inventory/${id}`, {
+    setDeleting(true);
+    const response = await fetch(`/api/inventory/${itemToDelete}`, {
       method: 'DELETE',
     });
 
     if (response.ok) {
       fetchInventory();
+      setSuccessMessage('Item Deleted Successfully');
+      setShowSuccessPopup(true);
     } else {
       const result = await response.json();
       alert(`Error: ${result.error || 'Failed to delete item'}`);
     }
+    
+    setShowDeleteConfirm(false);
+    setItemToDelete(null);
+    setDeleting(false);
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteConfirm(false);
+    setItemToDelete(null);
   };
 
   const resetForm = () => {
@@ -969,6 +995,52 @@ export default function InventoryPage() {
                   className="max-w-full max-h-[85vh] object-contain rounded-lg"
                 />
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Success Popup */}
+        {showSuccessPopup && (
+          <div className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Success</h3>
+              <p className="text-gray-700 mb-6">
+                {successMessage === 'Item Added Successfully' 
+                  ? 'Your item is listed in inventory.' 
+                  : 'Your item is deleted from the inventory.'}
+              </p>
+              <button
+                onClick={() => setShowSuccessPopup(false)}
+                className="w-full px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition-colors"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Dialog */}
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Confirm Deletion</h3>
+              <p className="text-gray-700 mb-6">Are you sure you want to delete this item?</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={cancelDelete}
+                  disabled={deleting}
+                  className="flex-1 px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-900 font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  disabled={deleting}
+                  className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {deleting ? 'Deleting...' : 'Yes, Delete'}
+                </button>
+              </div>
             </div>
           </div>
         )}
