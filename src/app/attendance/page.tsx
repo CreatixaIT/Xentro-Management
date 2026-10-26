@@ -639,18 +639,9 @@ export default function AttendancePage() {
                     <span className="text-sm text-gray-700">Absent Days: {stats.eligibleAbsentDays}</span>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Right Column - Summary Statistics */}
-            <div className="flex-1">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  {period.charAt(0).toUpperCase() + period.slice(1)} Summary
-                </h3>
                 {/* Sign In/Sign Out Buttons */}
                 {isToday() && (
-                  <div className="flex gap-3">
+                  <div className="flex gap-3 mt-4">
                     <button
                       onClick={handleSignIn}
                       disabled={signingIn || signingOut || isSignedIn() || isAttendanceCompleted()}
@@ -668,13 +659,22 @@ export default function AttendancePage() {
                       className={`px-6 py-2 rounded-lg font-medium transition-colors ${
                         signingIn || signingOut || !isSignedIn()
                           ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          : 'bg-gray-500 hover:bg-gray-600 text-white'
+                          : 'bg-yellow-400 hover:bg-yellow-500 text-gray-900'
                       }`}
                     >
                       {signingOut ? 'Signing Out...' : 'Sign Out'}
                     </button>
                   </div>
                 )}
+              </div>
+            </div>
+
+            {/* Right Column - Summary Statistics */}
+            <div className="flex-1">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {period.charAt(0).toUpperCase() + period.slice(1)} Summary
+                </h3>
               </div>
 
               {/* Statistics */}
