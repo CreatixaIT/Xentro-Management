@@ -310,6 +310,11 @@ export default function AttendancePage() {
 
   // Check if attendance is completed for selected date
   const isAttendanceCompleted = (): boolean => {
+    if (isToday()) {
+      // For today, use currentSession (source of truth from server)
+      return !!(currentSession && currentSession.sign_out_time);
+    }
+    // For other dates, check sessions array
     const selectedBusinessDate = formatDate(selectedDate);
     const todaysAttendance = sessions.find(s => s.business_date === selectedBusinessDate);
     return !!(todaysAttendance && todaysAttendance.sign_out_time);
@@ -317,6 +322,11 @@ export default function AttendancePage() {
 
   // Check if signed in for selected date
   const isSignedIn = (): boolean => {
+    if (isToday()) {
+      // For today, use currentSession (source of truth from server)
+      return !!(currentSession && currentSession.sign_in_time && !currentSession.sign_out_time);
+    }
+    // For other dates, check sessions array
     const selectedBusinessDate = formatDate(selectedDate);
     const todaysAttendance = sessions.find(s => s.business_date === selectedBusinessDate);
     return !!(todaysAttendance && todaysAttendance.sign_in_time && !todaysAttendance.sign_out_time);
