@@ -639,33 +639,6 @@ export default function AttendancePage() {
                     <span className="text-sm text-gray-700">Absent Days: {stats.eligibleAbsentDays}</span>
                   </div>
                 </div>
-                {/* Sign In/Sign Out Buttons */}
-                {isToday() && (
-                  <div className="flex gap-4 mt-12">
-                    <button
-                      onClick={handleSignIn}
-                      disabled={signingIn || signingOut || isSignedIn() || isAttendanceCompleted()}
-                      className={`px-10 py-4 rounded-lg font-semibold text-lg transition-colors ${
-                        signingIn || signingOut || isSignedIn() || isAttendanceCompleted()
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          : 'bg-green-500 hover:bg-green-600 text-white'
-                      }`}
-                    >
-                      {signingIn ? 'Signing In...' : 'Sign In'}
-                    </button>
-                    <button
-                      onClick={handleSignOut}
-                      disabled={signingIn || signingOut || !isSignedIn()}
-                      className={`px-10 py-4 rounded-lg font-semibold text-lg transition-colors ${
-                        signingIn || signingOut || !isSignedIn()
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          : 'bg-yellow-400 hover:bg-yellow-500 text-gray-900'
-                      }`}
-                    >
-                      {signingOut ? 'Signing Out...' : 'Sign Out'}
-                    </button>
-                  </div>
-                )}
               </div>
             </div>
 
@@ -733,6 +706,34 @@ export default function AttendancePage() {
               </div>
             </div>
           </div>
+
+          {/* Sign In/Sign Out Buttons */}
+          {isToday() && (
+            <div className="flex gap-4 mt-6">
+              <button
+                onClick={handleSignIn}
+                disabled={signingIn || signingOut || isSignedIn() || isAttendanceCompleted()}
+                className={`px-14 py-5 rounded-lg font-bold text-xl transition-colors ${
+                  signingIn || signingOut || isSignedIn() || isAttendanceCompleted()
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-green-500 hover:bg-green-600 text-white'
+                }`}
+              >
+                {signingIn ? 'Signing In...' : 'Sign In'}
+              </button>
+              <button
+                onClick={handleSignOut}
+                disabled={signingIn || signingOut || !isSignedIn()}
+                className={`px-14 py-5 rounded-lg font-bold text-xl transition-colors ${
+                  signingIn || signingOut || !isSignedIn()
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-yellow-400 hover:bg-yellow-500 text-gray-900'
+                }`}
+              >
+                {signingOut ? 'Signing Out...' : 'Sign Out'}
+              </button>
+            </div>
+          )}
 
           {error && (
             <div className="mt-4 bg-red-100 border border-red-300 text-red-700 px-4 py-2 rounded-lg">
