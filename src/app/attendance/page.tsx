@@ -639,13 +639,22 @@ export default function AttendancePage() {
                     <span className="text-sm text-gray-700">Absent Days: {stats.eligibleAbsentDays}</span>
                   </div>
                 </div>
-                {/* Sign In and Sign Out Buttons */}
+              </div>
+            </div>
+
+            {/* Right Column - Summary Statistics */}
+            <div className="flex-1">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {period.charAt(0).toUpperCase() + period.slice(1)} Summary
+                </h3>
+                {/* Sign In/Sign Out Buttons */}
                 {isToday() && (
-                  <div className="w-full space-y-12 mt-8">
+                  <div className="flex gap-3">
                     <button
                       onClick={handleSignIn}
                       disabled={signingIn || signingOut || isSignedIn() || isAttendanceCompleted()}
-                      className={`w-full px-14 py-5 rounded-lg font-bold text-xl transition-colors ${
+                      className={`px-6 py-3 rounded-lg font-medium transition-colors ${
                         signingIn || signingOut || isSignedIn() || isAttendanceCompleted()
                           ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                           : 'bg-green-500 hover:bg-green-600 text-white'
@@ -656,7 +665,7 @@ export default function AttendancePage() {
                     <button
                       onClick={handleSignOut}
                       disabled={signingIn || signingOut || !isSignedIn()}
-                      className={`w-full px-14 py-5 rounded-lg font-bold text-xl transition-colors ${
+                      className={`px-6 py-3 rounded-lg font-medium transition-colors ${
                         signingIn || signingOut || !isSignedIn()
                           ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                           : 'bg-yellow-400 hover:bg-yellow-500 text-gray-900'
@@ -666,15 +675,6 @@ export default function AttendancePage() {
                     </button>
                   </div>
                 )}
-              </div>
-            </div>
-
-            {/* Right Column - Summary Statistics */}
-            <div className="flex-1">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  {period.charAt(0).toUpperCase() + period.slice(1)} Summary
-                </h3>
               </div>
 
               {/* Statistics */}
