@@ -639,6 +639,22 @@ export default function AttendancePage() {
                     <span className="text-sm text-gray-700">Absent Days: {stats.eligibleAbsentDays}</span>
                   </div>
                 </div>
+                {/* Sign In Button */}
+                {isToday() && (
+                  <div className="mt-8">
+                    <button
+                      onClick={handleSignIn}
+                      disabled={signingIn || signingOut || isSignedIn() || isAttendanceCompleted()}
+                      className={`w-full px-14 py-5 rounded-lg font-bold text-xl transition-colors ${
+                        signingIn || signingOut || isSignedIn() || isAttendanceCompleted()
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          : 'bg-green-500 hover:bg-green-600 text-white'
+                      }`}
+                    >
+                      {signingIn ? 'Signing In...' : 'Sign In'}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -648,6 +664,20 @@ export default function AttendancePage() {
                 <h3 className="text-lg font-semibold text-gray-900">
                   {period.charAt(0).toUpperCase() + period.slice(1)} Summary
                 </h3>
+                {/* Sign Out Button */}
+                {isToday() && (
+                  <button
+                    onClick={handleSignOut}
+                    disabled={signingIn || signingOut || !isSignedIn()}
+                    className={`px-14 py-5 rounded-lg font-bold text-xl transition-colors ${
+                      signingIn || signingOut || !isSignedIn()
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-yellow-400 hover:bg-yellow-500 text-gray-900'
+                    }`}
+                  >
+                    {signingOut ? 'Signing Out...' : 'Sign Out'}
+                  </button>
+                )}
               </div>
 
               {/* Statistics */}
@@ -706,34 +736,6 @@ export default function AttendancePage() {
               </div>
             </div>
           </div>
-
-          {/* Sign In/Sign Out Buttons */}
-          {isToday() && (
-            <div className="flex justify-center gap-4 mt-6">
-              <button
-                onClick={handleSignIn}
-                disabled={signingIn || signingOut || isSignedIn() || isAttendanceCompleted()}
-                className={`px-14 py-5 rounded-lg font-bold text-xl transition-colors ${
-                  signingIn || signingOut || isSignedIn() || isAttendanceCompleted()
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-green-500 hover:bg-green-600 text-white'
-                }`}
-              >
-                {signingIn ? 'Signing In...' : 'Sign In'}
-              </button>
-              <button
-                onClick={handleSignOut}
-                disabled={signingIn || signingOut || !isSignedIn()}
-                className={`px-14 py-5 rounded-lg font-bold text-xl transition-colors ${
-                  signingIn || signingOut || !isSignedIn()
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-yellow-400 hover:bg-yellow-500 text-gray-900'
-                }`}
-              >
-                {signingOut ? 'Signing Out...' : 'Sign Out'}
-              </button>
-            </div>
-          )}
 
           {error && (
             <div className="mt-4 bg-red-100 border border-red-300 text-red-700 px-4 py-2 rounded-lg">
