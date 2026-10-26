@@ -148,6 +148,8 @@ export default function AttendancePage() {
       await fetchSessions();
     } catch (err: any) {
       setError(err.message);
+      // Refresh state on error to ensure buttons are not stuck
+      await fetchSessions();
     } finally {
       setSigningIn(false);
     }
@@ -183,6 +185,8 @@ export default function AttendancePage() {
       await fetchSessions();
     } catch (err: any) {
       setError(err.message);
+      // Refresh state on error to ensure buttons are not stuck
+      await fetchSessions();
     } finally {
       setSigningOut(false);
     }
@@ -639,9 +643,9 @@ export default function AttendancePage() {
                   <div className="flex gap-3">
                     <button
                       onClick={handleSignIn}
-                      disabled={!isToday() || isSignedIn() || isAttendanceCompleted() || signingIn || signingOut}
+                      disabled={signingIn || signingOut || isSignedIn() || isAttendanceCompleted()}
                       className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-                        !isToday() || isSignedIn() || isAttendanceCompleted() || signingIn || signingOut
+                        signingIn || signingOut || isSignedIn() || isAttendanceCompleted()
                           ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                           : 'bg-green-500 hover:bg-green-600 text-white'
                       }`}
@@ -650,9 +654,9 @@ export default function AttendancePage() {
                     </button>
                     <button
                       onClick={handleSignOut}
-                      disabled={!isToday() || !isSignedIn() || signingIn || signingOut}
+                      disabled={signingIn || signingOut || !isSignedIn()}
                       className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-                        !isToday() || !isSignedIn() || signingIn || signingOut
+                        signingIn || signingOut || !isSignedIn()
                           ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                           : 'bg-gray-500 hover:bg-gray-600 text-white'
                       }`}

@@ -16,18 +16,25 @@ export async function POST() {
 
     if (rpcError) {
       console.error('Sign-in RPC error:', rpcError);
+      // Check if function doesn't exist (migration 016 not applied)
+      if (rpcError.code === '42883' || rpcError.message?.includes('function') && rpcError.message?.includes('does not exist')) {
+        return NextResponse.json(
+          { error: 'Attendance enhancements not yet applied. Please contact administrator.' },
+          { status: 503 }
+        );
+      }
       if (rpcError.message && rpcError.message.includes('already exists')) {
         return NextResponse.json(
           { error: 'You have already signed in today.' },
           { status: 400 }
         );
       }
-      return NextResponse.json({ error: 'Failed to sign in' }, { status: 500 });
+      return NextResponse.json({ error: `Failed to sign in: ${rpcError.message}` }, { status: 500 });
     }
 
     if (!attendance || attendance.length === 0) {
       return NextResponse.json(
-        { error: 'Failed to sign in' },
+        { error: 'Failed to sign in: No attendance record returned' },
         { status: 500 }
       );
     }

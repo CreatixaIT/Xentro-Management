@@ -131,7 +131,14 @@ export async function POST(req: Request) {
 
     if (overlapError) {
       console.error('Overlap check error:', overlapError);
-      return NextResponse.json({ error: 'Failed to check for overlapping requests' }, { status: 500 });
+      // Check if function doesn't exist (migration 017 not applied)
+      if (overlapError.code === '42883' || overlapError.message?.includes('function') && overlapError.message?.includes('does not exist')) {
+        return NextResponse.json(
+          { error: 'Leave requests feature not yet enabled. Please contact administrator.' },
+          { status: 503 }
+        );
+      }
+      return NextResponse.json({ error: `Failed to check for overlapping requests: ${overlapError.message}` }, { status: 500 });
     }
 
     if (hasOverlap) {
@@ -156,7 +163,14 @@ export async function POST(req: Request) {
 
     if (error) {
       console.error('Create leave request error:', error);
-      return NextResponse.json({ error: 'Failed to create leave request' }, { status: 500 });
+      // Check if table doesn't exist (migration 017 not applied)
+      if (error.code === '42P01') {
+        return NextResponse.json(
+          { error: 'Leave requests feature not yet enabled. Please contact administrator.' },
+          { status: 503 }
+        );
+      }
+      return NextResponse.json({ error: `Failed to create leave request: ${error.message}` }, { status: 500 });
     }
 
     return NextResponse.json({

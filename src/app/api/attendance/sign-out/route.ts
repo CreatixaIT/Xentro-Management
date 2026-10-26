@@ -16,13 +16,20 @@ export async function POST() {
 
     if (rpcError) {
       console.error('Sign-out RPC error:', rpcError);
+      // Check if function doesn't exist (migration 016 not applied)
+      if (rpcError.code === '42883' || rpcError.message?.includes('function') && rpcError.message?.includes('does not exist')) {
+        return NextResponse.json(
+          { error: 'Attendance enhancements not yet applied. Please contact administrator.' },
+          { status: 503 }
+        );
+      }
       if (rpcError.message && rpcError.message.includes('No open attendance record')) {
         return NextResponse.json(
           { error: 'No attendance record found for today. Please sign in first.' },
           { status: 400 }
         );
       }
-      return NextResponse.json({ error: 'Failed to sign out' }, { status: 500 });
+      return NextResponse.json({ error: `Failed to sign out: ${rpcError.message}` }, { status: 500 });
     }
 
     if (!attendance || attendance.length === 0) {
