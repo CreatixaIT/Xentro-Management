@@ -639,9 +639,9 @@ export default function AttendancePage() {
                     <span className="text-sm text-gray-700">Absent Days: {stats.eligibleAbsentDays}</span>
                   </div>
                 </div>
-                {/* Sign In Button */}
+                {/* Sign In and Sign Out Buttons */}
                 {isToday() && (
-                  <div className="mt-8">
+                  <div className="mt-8 space-y-3">
                     <button
                       onClick={handleSignIn}
                       disabled={signingIn || signingOut || isSignedIn() || isAttendanceCompleted()}
@@ -652,6 +652,17 @@ export default function AttendancePage() {
                       }`}
                     >
                       {signingIn ? 'Signing In...' : 'Sign In'}
+                    </button>
+                    <button
+                      onClick={handleSignOut}
+                      disabled={signingIn || signingOut || !isSignedIn()}
+                      className={`w-full px-14 py-5 rounded-lg font-bold text-xl transition-colors ${
+                        signingIn || signingOut || !isSignedIn()
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          : 'bg-yellow-400 hover:bg-yellow-500 text-gray-900'
+                      }`}
+                    >
+                      {signingOut ? 'Signing Out...' : 'Sign Out'}
                     </button>
                   </div>
                 )}
@@ -664,20 +675,6 @@ export default function AttendancePage() {
                 <h3 className="text-lg font-semibold text-gray-900">
                   {period.charAt(0).toUpperCase() + period.slice(1)} Summary
                 </h3>
-                {/* Sign Out Button */}
-                {isToday() && (
-                  <button
-                    onClick={handleSignOut}
-                    disabled={signingIn || signingOut || !isSignedIn()}
-                    className={`px-14 py-5 rounded-lg font-bold text-xl transition-colors ${
-                      signingIn || signingOut || !isSignedIn()
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : 'bg-yellow-400 hover:bg-yellow-500 text-gray-900'
-                    }`}
-                  >
-                    {signingOut ? 'Signing Out...' : 'Sign Out'}
-                  </button>
-                )}
               </div>
 
               {/* Statistics */}
