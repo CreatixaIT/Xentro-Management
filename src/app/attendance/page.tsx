@@ -618,9 +618,30 @@ export default function AttendancePage() {
                     />
                   </svg>
                 </div>
+                {/* Legend */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded-full bg-green-500"></div>
+                    <span className="text-sm text-gray-700">Days Worked: {stats.daysWorked}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded-full bg-blue-500"></div>
+                    <span className="text-sm text-gray-700">Approved Leave: {stats.approvedLeaveDays}</span>
+                  </div>
+                  {stats.pendingLeaveDays > 0 && (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-full bg-yellow-500"></div>
+                      <span className="text-sm text-gray-700">Pending Leave: {stats.pendingLeaveDays}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded-full bg-red-500"></div>
+                    <span className="text-sm text-gray-700">Absent Days: {stats.eligibleAbsentDays}</span>
+                  </div>
+                </div>
                 {/* Sign In and Sign Out Buttons */}
                 {isToday() && (
-                  <div className="w-full space-y-32">
+                  <div className="w-full space-y-12 mt-8">
                     <button
                       onClick={handleSignIn}
                       disabled={signingIn || signingOut || isSignedIn() || isAttendanceCompleted()}
@@ -645,27 +666,6 @@ export default function AttendancePage() {
                     </button>
                   </div>
                 )}
-                {/* Legend */}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-full bg-green-500"></div>
-                    <span className="text-sm text-gray-700">Days Worked: {stats.daysWorked}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-full bg-blue-500"></div>
-                    <span className="text-sm text-gray-700">Approved Leave: {stats.approvedLeaveDays}</span>
-                  </div>
-                  {stats.pendingLeaveDays > 0 && (
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 rounded-full bg-yellow-500"></div>
-                      <span className="text-sm text-gray-700">Pending Leave: {stats.pendingLeaveDays}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-full bg-red-500"></div>
-                    <span className="text-sm text-gray-700">Absent Days: {stats.eligibleAbsentDays}</span>
-                  </div>
-                </div>
               </div>
             </div>
 
