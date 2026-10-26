@@ -7,7 +7,9 @@ interface LeaveRequest {
   id: string;
   profile_id: string;
   employee_name?: string;
+  employee_username?: string;
   employee_email?: string;
+  employee_profile_id?: string;
   start_date: string;
   end_date: string;
   reason: string;
@@ -21,7 +23,7 @@ export default function AdminLeaveRequests() {
   const [requests, setRequests] = useState<LeaveRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [filter, setFilter] = useState<'all' | 'pending' | 'processed'>('pending');
+  const [filter, setFilter] = useState<'pending' | 'processed'>('pending');
   const [tableExists, setTableExists] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
   const [remarks, setRemarks] = useState<Record<string, string>>({});
@@ -156,7 +158,7 @@ export default function AdminLeaveRequests() {
         {/* Filter */}
         <div className="bg-gray-800 rounded-lg p-4 mb-6">
           <div className="flex gap-2">
-            {(['all', 'pending', 'processed'] as const).map((f) => (
+            {(['pending', 'processed'] as const).map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
@@ -197,8 +199,11 @@ export default function AdminLeaveRequests() {
                     <tr key={request.id} className="border-b border-gray-700 hover:bg-gray-700/50">
                       <td className="px-4 py-3">
                         <div>
-                          <p className="font-medium">{request.employee_name || 'Unknown'}</p>
-                          <p className="text-sm text-gray-400">{request.employee_email || ''}</p>
+                          <p className="font-medium">{request.employee_name}</p>
+                          {request.employee_username && (
+                            <p className="text-sm text-gray-400">@{request.employee_username}</p>
+                          )}
+                          <p className="text-xs text-gray-500">ID: {request.employee_profile_id}</p>
                         </div>
                       </td>
                       <td className="px-4 py-3 text-sm">

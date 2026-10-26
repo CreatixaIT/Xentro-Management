@@ -26,13 +26,7 @@ export async function GET(req: Request) {
 
     let query = supabase
       .from('leave_requests')
-      .select(`
-        *,
-        profiles!leave_requests_profile_id_fkey (
-          username,
-          email
-        )
-      `)
+      .select('*')
       .order('created_at', { ascending: false });
 
     if (filter === 'pending') {
@@ -53,12 +47,41 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Failed to fetch leave requests' }, { status: 500 });
     }
 
-    // Format response
-    const formattedRequests = (requests || []).map((req: any) => ({
-      ...req,
-      employee_name: req.profiles?.username,
-      employee_email: req.profiles?.email,
-    }));
+    // Collect unique profile IDs
+    const profileIds = [...new Set((requests || []).map((req: any) => req.profile_id))];
+
+    // Fetch profiles for those IDs
+    let profilesMap: Record<string, any> = {};
+    if (profileIds.length > 0) {
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, email, full_name')
+        .in('id', profileIds);
+
+      if (profilesError) {
+        console.error('Fetch profiles error:', profilesError);
+        return NextResponse.json({ error: 'Failed to fetch employee profiles' }, { status: 500 });
+      }
+
+      // Create a map for easy lookup
+      profilesMap = (profiles || []).reduce((map: Record<string, any>, profile: any) => {
+        map[profile.id] = profile;
+        return map;
+      }, {});
+    }
+
+    // Format response with employee details
+    const formattedRequests = (requests || []).map((req: any) => {
+      const profile = profilesMap[req.profile_id];
+      const employeeName = profile?.full_name || profile?.username || req.profile_id;
+      return {
+        ...req,
+        employee_name: employeeName,
+        employee_username: profile?.username || null,
+        employee_email: profile?.email || null,
+        employee_profile_id: req.profile_id,
+      };
+    });
 
     return NextResponse.json({ requests: formattedRequests });
   } catch (error) {
