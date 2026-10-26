@@ -337,10 +337,10 @@ export default function AttendancePage() {
       0
     );
 
-    // Calculate approved leave days in the period (include PENDING for visibility)
+    // Calculate approved leave days in the period (only APPROVED status)
     const approvedLeaveDays = new Set<string>();
     leaveRequests
-      .filter(lr => lr.status === 'APPROVED' || lr.status === 'PENDING')
+      .filter(lr => lr.status === 'APPROVED')
       .forEach(lr => {
         const start = new Date(lr.start_date);
         const end = new Date(lr.end_date);
@@ -352,13 +352,29 @@ export default function AttendancePage() {
         }
       });
 
+    // Calculate pending leave days in the period (for separate display if needed)
+    const pendingLeaveDays = new Set<string>();
+    leaveRequests
+      .filter(lr => lr.status === 'PENDING')
+      .forEach(lr => {
+        const start = new Date(lr.start_date);
+        const end = new Date(lr.end_date);
+        const current = new Date(start);
+        while (current <= end) {
+          const dateStr = current.toISOString().split('T')[0];
+          pendingLeaveDays.add(dateStr);
+          current.setDate(current.getDate() + 1);
+        }
+      });
+
     // Calculate eligible working days (excluding future dates)
     const today = new Date();
     const todayStr = formatDate(today);
     const eligibleSessions = sessions.filter(s => s.business_date <= todayStr);
     const eligibleDays = new Set(eligibleSessions.map(s => s.business_date)).size;
 
-    // Get total eligible days in the period for graph calculation
+    // Get total calendar days in the period for graph calculation
+    // Note: This is calendar days, not scheduled working days, as no working calendar data exists
     const { startDate, endDate } = getDateRange(period, selectedDate);
     const periodStart = new Date(startDate);
     const periodEnd = new Date(endDate);
@@ -381,6 +397,7 @@ export default function AttendancePage() {
       daysWorked: distinctDaysWorked,
       totalDuration: formatDuration(totalDuration),
       approvedLeaveDays: approvedLeaveDays.size,
+      pendingLeaveDays: pendingLeaveDays.size,
       eligibleAbsentDays: Math.max(0, eligibleDays - distinctDaysWorked - approvedLeaveDays.size),
       totalPeriodDays,
       status,
@@ -556,7 +573,7 @@ export default function AttendancePage() {
                       strokeWidth="3"
                       strokeDasharray={`${(stats.daysWorked / Math.max(stats.totalPeriodDays, 1)) * 100}, 100`}
                     />
-                    {/* Leave (Blue) */}
+                    {/* Approved Leave (Blue) */}
                     <path
                       d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                       fill="none"
@@ -565,6 +582,17 @@ export default function AttendancePage() {
                       strokeDasharray={`${(stats.approvedLeaveDays / Math.max(stats.totalPeriodDays, 1)) * 100}, 100`}
                       strokeDashoffset={`-${(stats.daysWorked / Math.max(stats.totalPeriodDays, 1)) * 100}`}
                     />
+                    {/* Pending Leave (Yellow) - shown conditionally */}
+                    {stats.pendingLeaveDays > 0 && (
+                      <path
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke="#eab308"
+                        strokeWidth="3"
+                        strokeDasharray={`${(stats.pendingLeaveDays / Math.max(stats.totalPeriodDays, 1)) * 100}, 100`}
+                        strokeDashoffset={`-${((stats.daysWorked + stats.approvedLeaveDays) / Math.max(stats.totalPeriodDays, 1)) * 100}`}
+                      />
+                    )}
                     {/* Absent (Red) */}
                     <path
                       d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
@@ -572,7 +600,7 @@ export default function AttendancePage() {
                       stroke="#ef4444"
                       strokeWidth="3"
                       strokeDasharray={`${(stats.eligibleAbsentDays / Math.max(stats.totalPeriodDays, 1)) * 100}, 100`}
-                      strokeDashoffset={`-${((stats.daysWorked + stats.approvedLeaveDays) / Math.max(stats.totalPeriodDays, 1)) * 100}`}
+                      strokeDashoffset={`-${((stats.daysWorked + stats.approvedLeaveDays + (stats.pendingLeaveDays || 0)) / Math.max(stats.totalPeriodDays, 1)) * 100}`}
                     />
                   </svg>
                 </div>
@@ -584,8 +612,14 @@ export default function AttendancePage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 rounded-full bg-blue-500"></div>
-                    <span className="text-sm text-gray-700">Leave Days: {stats.approvedLeaveDays}</span>
+                    <span className="text-sm text-gray-700">Approved Leave: {stats.approvedLeaveDays}</span>
                   </div>
+                  {stats.pendingLeaveDays > 0 && (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-full bg-yellow-500"></div>
+                      <span className="text-sm text-gray-700">Pending Leave: {stats.pendingLeaveDays}</span>
+                    </div>
+                  )}
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 rounded-full bg-red-500"></div>
                     <span className="text-sm text-gray-700">Absent Days: {stats.eligibleAbsentDays}</span>
@@ -633,17 +667,23 @@ export default function AttendancePage() {
               <div className="space-y-3">
                 {/* Period-level statistics */}
                 <div className="flex justify-between py-2 border-b border-gray-200">
-                  <span className="text-gray-600">Total Scheduled Days</span>
-                  <span className="font-medium text-gray-900">{stats.daysWorked + stats.approvedLeaveDays + stats.eligibleAbsentDays}</span>
+                  <span className="text-gray-600">Total Calendar Days</span>
+                  <span className="font-medium text-gray-900">{stats.totalPeriodDays}</span>
                 </div>
                 <div className="flex justify-between py-2 border-b border-gray-200">
                   <span className="text-gray-600">Days Worked</span>
                   <span className="font-medium text-gray-900">{stats.daysWorked}</span>
                 </div>
                 <div className="flex justify-between py-2 border-b border-gray-200">
-                  <span className="text-gray-600">Leave Days</span>
+                  <span className="text-gray-600">Approved Leave Days</span>
                   <span className="font-medium text-gray-900">{stats.approvedLeaveDays}</span>
                 </div>
+                {stats.pendingLeaveDays > 0 && (
+                  <div className="flex justify-between py-2 border-b border-gray-200">
+                    <span className="text-gray-600">Pending Leave Days</span>
+                    <span className="font-medium text-gray-900">{stats.pendingLeaveDays}</span>
+                  </div>
+                )}
                 <div className="flex justify-between py-2 border-b border-gray-200">
                   <span className="text-gray-600">Absent Days</span>
                   <span className="font-medium text-gray-900">{stats.eligibleAbsentDays}</span>
