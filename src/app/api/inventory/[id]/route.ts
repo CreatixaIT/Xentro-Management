@@ -143,13 +143,42 @@ export async function DELETE(
 
   const { id } = await context.params;
 
+  // First check if the item exists
+  const { data: existingItem, error: checkError } = await supabase
+    .from('inventory')
+    .select('id')
+    .eq('id', id)
+    .single();
+
+  if (checkError) {
+    console.error('DELETE check error:', checkError);
+    return NextResponse.json({ error: checkError.message }, { status: 500 });
+  }
+
+  if (!existingItem) {
+    return NextResponse.json({ error: 'Item not found' }, { status: 404 });
+  }
+
+  // Perform the deletion
   const { error } = await supabase
     .from('inventory')
     .delete()
     .eq('id', id);
 
   if (error) {
+    console.error('DELETE error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  // Verify the deletion was successful
+  const { data: deletedCheck } = await supabase
+    .from('inventory')
+    .select('id')
+    .eq('id', id)
+    .single();
+
+  if (deletedCheck) {
+    return NextResponse.json({ error: 'Failed to delete item' }, { status: 500 });
   }
 
   return NextResponse.json({ success: true });
