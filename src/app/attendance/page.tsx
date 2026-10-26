@@ -709,7 +709,7 @@ export default function AttendancePage() {
 
           {/* Sign In/Sign Out Buttons */}
           {isToday() && (
-            <div className="flex gap-4 mt-6">
+            <div className="flex justify-center gap-4 mt-6">
               <button
                 onClick={handleSignIn}
                 disabled={signingIn || signingOut || isSignedIn() || isAttendanceCompleted()}
