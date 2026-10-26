@@ -641,7 +641,7 @@ export default function AttendancePage() {
                 </div>
                 {/* Sign In and Sign Out Buttons */}
                 {isToday() && (
-                  <div className="mt-8 space-y-3">
+                  <div className="mt-8 space-y-32">
                     <button
                       onClick={handleSignIn}
                       disabled={signingIn || signingOut || isSignedIn() || isAttendanceCompleted()}
