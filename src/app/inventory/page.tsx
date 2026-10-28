@@ -118,6 +118,10 @@ export default function InventoryPage() {
 
   const [categoryName, setCategoryName] = useState('');
   const [saving, setSaving] = useState(false);
+  
+  // Progress and compression state
+  const [uploadProgress, setUploadProgress] = useState<'idle' | 'compressing' | 'uploading' | 'saving'>('idle');
+  const [compressedSize, setCompressedSize] = useState<number | null>(null);
 
   useEffect(() => {
     fetchCategories();
@@ -228,6 +232,7 @@ export default function InventoryPage() {
     };
 
     if (editingItem) {
+      setUploadProgress('uploading');
       const response = await fetch(`/api/inventory/${editingItem.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -239,9 +244,11 @@ export default function InventoryPage() {
       if (!response.ok) {
         alert(`Error: ${result.error || 'Failed to update item'}`);
         setSaving(false);
+        setUploadProgress('idle');
         return;
       }
       
+      setUploadProgress('idle');
       setShowAddModal(false);
       setEditingItem(null);
       resetForm();
@@ -253,6 +260,7 @@ export default function InventoryPage() {
         original_quantity: parseInt(formData.quantity),
       };
       
+      setUploadProgress('uploading');
       const response = await fetch('/api/inventory', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -264,14 +272,19 @@ export default function InventoryPage() {
       if (!response.ok) {
         alert(`Error: ${result.error || 'Failed to create item'}`);
         setSaving(false);
+        setUploadProgress('idle');
         return;
       }
       
+      setUploadProgress('idle');
       setShowAddModal(false);
       resetForm();
       fetchInventory();
-      setSuccessMessage('Item Added Successfully');
+      
+      const sizeKB = compressedSize ? Math.round(compressedSize / 1024) : 0;
+      setSuccessMessage(`Inventory item saved successfully. Image optimized to ${sizeKB} KB.`);
       setShowSuccessPopup(true);
+      setCompressedSize(null);
     }
     
     setSaving(false);
@@ -348,14 +361,105 @@ export default function InventoryPage() {
     setEditingItem(null);
   };
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+  const compressImage = async (file: File): Promise<{ dataUrl: string; size: number }> => {
+    return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData({ ...formData, photo_data: reader.result as string });
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error('Failed to get canvas context'));
+            return;
+          }
+
+          // Calculate dimensions (max 1280x1280)
+          const maxDimension = 1280;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > maxDimension || height > maxDimension) {
+            const ratio = Math.min(maxDimension / width, maxDimension / height);
+            width = Math.round(width * ratio);
+            height = Math.round(height * ratio);
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Start with high quality and reduce if needed
+          const compressToSize = (quality: number): string => {
+            return canvas.toDataURL('image/webp', quality);
+          };
+
+          let quality = 0.9;
+          let dataUrl = compressToSize(quality);
+          let size = Math.round((dataUrl.length * 3) / 4); // Approximate size
+
+          // Reduce quality until size is <= 100 KB or quality is too low
+          while (size > 100000 && quality > 0.1) {
+            quality -= 0.1;
+            dataUrl = compressToSize(quality);
+            size = Math.round((dataUrl.length * 3) / 4);
+          }
+
+          // If still too large, reduce dimensions further
+          if (size > 100000) {
+            const reduceFactor = 0.8;
+            canvas.width = Math.round(width * reduceFactor);
+            canvas.height = Math.round(height * reduceFactor);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            
+            quality = 0.9;
+            dataUrl = compressToSize(quality);
+            size = Math.round((dataUrl.length * 3) / 4);
+
+            while (size > 100000 && quality > 0.1) {
+              quality -= 0.1;
+              dataUrl = compressToSize(quality);
+              size = Math.round((dataUrl.length * 3) / 4);
+            }
+          }
+
+          if (size > 100000) {
+            reject(new Error('Image compression failed. Please select a smaller image.'));
+            return;
+          }
+
+          resolve({ dataUrl, size });
+        };
+        img.onerror = () => reject(new Error('Failed to load image'));
+        img.src = e.target?.result as string;
       };
+      reader.onerror = () => reject(new Error('Failed to read file'));
       reader.readAsDataURL(file);
+    });
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      alert('Please select a valid image file (JPEG, PNG, or WebP)');
+      return;
+    }
+
+    try {
+      setUploadProgress('compressing');
+      const { dataUrl, size } = await compressImage(file);
+      setCompressedSize(size);
+      setFormData({ ...formData, photo_data: dataUrl });
+      setUploadProgress('idle');
+    } catch (error) {
+      console.error('Compression error:', error);
+      alert(error instanceof Error ? error.message : 'Image compression failed. Please try another image.');
+      setUploadProgress('idle');
+      setCompressedSize(null);
     }
   };
 
@@ -995,6 +1099,27 @@ export default function InventoryPage() {
                   className="max-w-full max-h-[85vh] object-contain rounded-lg"
                 />
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Upload Progress Modal */}
+        {uploadProgress !== 'idle' && (
+          <div className="fixed inset-0 z-[70] bg-black/50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full">
+              <div className="flex items-center justify-center mb-4">
+                <div className="w-12 h-12 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2 text-center">
+                {uploadProgress === 'compressing' && 'Optimizing your image'}
+                {uploadProgress === 'uploading' && 'Your image is uploading'}
+                {uploadProgress === 'saving' && 'Saving your inventory item'}
+              </h3>
+              <p className="text-gray-700 text-center">
+                {uploadProgress === 'compressing' && 'Please wait…'}
+                {uploadProgress === 'uploading' && 'Your item is being saved. Please wait…'}
+                {uploadProgress === 'saving' && 'Almost done…'}
+              </p>
             </div>
           </div>
         )}
