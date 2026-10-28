@@ -603,25 +603,25 @@ export default function InventoryPage() {
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => { resetForm(); setShowAddModal(true); }}
-                className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white font-medium rounded-lg transition-colors"
+                className="px-3 py-2 md:px-4 md:py-2 bg-yellow-500 hover:bg-yellow-600 text-white font-medium rounded-lg transition-colors text-sm md:text-base"
               >
                 Add Item
               </button>
               <button
                 onClick={() => setShowCategoryModal(true)}
-                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors"
+                className="px-3 py-2 md:px-4 md:py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors text-sm md:text-base"
               >
                 Add Category
               </button>
               <button
                 onClick={generatePDF}
-                className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition-colors"
+                className="px-3 py-2 md:px-4 md:py-2 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition-colors text-sm md:text-base"
               >
                 Generate Report
               </button>
               <button
                 onClick={() => setShowColumnModal(true)}
-                className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors"
+                className="px-3 py-2 md:px-4 md:py-2 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors text-sm md:text-base"
               >
                 Columns
               </button>
@@ -630,8 +630,8 @@ export default function InventoryPage() {
         </div>
 
         {/* Filters */}
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-md border border-white/30 p-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-md border border-white/30 p-4 md:p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
             <div>
               <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">Month</label>
               <select
@@ -728,7 +728,7 @@ export default function InventoryPage() {
         </div>
 
         {/* Inventory List */}
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-md border border-white/30 p-6">
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-md border border-white/30 p-4 md:p-6">
           {loading ? (
             <div className="text-center py-12">
               <p className="text-gray-600">Loading...</p>
@@ -740,7 +740,7 @@ export default function InventoryPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-[800px]">
                 <thead>
                   <tr className="border-b border-gray-200">
                     {selectedColumns.map(col => (
