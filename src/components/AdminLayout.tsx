@@ -74,8 +74,8 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
 
   return (
     <div className="min-h-screen relative overflow-hidden" style={{ backgroundColor: '#080B14', backgroundImage: 'url(/dashboard-bg.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}>
-      {/* Dark overlay for glassmorphism readability */}
-      <div className="absolute inset-0" style={{ backgroundColor: 'rgba(8, 11, 20, 0.85)' }} />
+      {/* Dark overlay for glassmorphism readability - reduced opacity to show background */}
+      <div className="absolute inset-0" style={{ backgroundColor: 'rgba(8, 11, 20, 0.40)' }} />
       
       {/* Sophisticated background glow effects */}
       <div className="fixed top-0 left-0 w-[500px] h-[500px] rounded-full blur-[120px] opacity-30" style={{ backgroundColor: '#8B5CF6', transform: 'translate(-50%, -50%)' }} />
@@ -99,7 +99,7 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
           ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         `}
       >
-        <div className="relative h-full backdrop-blur-xl rounded-2xl md:rounded-none shadow-2xl flex flex-col overflow-hidden" style={{ backgroundColor: 'rgba(20, 27, 45, 0.72)', border: '1px solid rgba(255, 255, 255, 0.10)' }}>
+        <div className="relative h-full backdrop-blur-xl rounded-2xl md:rounded-none shadow-2xl flex flex-col overflow-hidden" style={{ backgroundColor: 'rgba(20, 27, 45, 0.85)', border: '1px solid rgba(255, 255, 255, 0.10)' }}>
           {/* Logo */}
           <div className="p-5 md:p-6 border-b" style={{ borderColor: 'rgba(255, 255, 255, 0.10)' }}>
             <div className="flex items-center gap-3">
@@ -192,7 +192,7 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
         {/* Header */}
         <header className="sticky top-0 z-30 px-3 md:px-4 lg:px-8 py-3 md:py-4">
           <div className="relative">
-            <div className="relative backdrop-blur-xl rounded-2xl shadow-2xl px-4 md:px-6 py-3 md:py-4" style={{ backgroundColor: 'rgba(20, 27, 45, 0.72)', border: '1px solid rgba(255, 255, 255, 0.10)' }}>
+            <div className="relative backdrop-blur-xl rounded-2xl shadow-2xl px-4 md:px-6 py-3 md:py-4" style={{ backgroundColor: 'rgba(20, 27, 45, 0.85)', border: '1px solid rgba(255, 255, 255, 0.10)' }}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 md:gap-4">
                   {/* Mobile menu button */}
