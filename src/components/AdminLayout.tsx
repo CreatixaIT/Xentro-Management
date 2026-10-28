@@ -73,7 +73,10 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
   }, []);
 
   return (
-    <div className="min-h-screen relative overflow-hidden" style={{ backgroundColor: '#080B14' }}>
+    <div className="min-h-screen relative overflow-hidden" style={{ backgroundColor: '#080B14', backgroundImage: 'url(/dashboard-bg.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}>
+      {/* Dark overlay for glassmorphism readability */}
+      <div className="absolute inset-0" style={{ backgroundColor: 'rgba(8, 11, 20, 0.85)' }} />
+      
       {/* Sophisticated background glow effects */}
       <div className="fixed top-0 left-0 w-[500px] h-[500px] rounded-full blur-[120px] opacity-30" style={{ backgroundColor: '#8B5CF6', transform: 'translate(-50%, -50%)' }} />
       <div className="fixed bottom-0 right-0 w-[500px] h-[500px] rounded-full blur-[120px] opacity-20" style={{ backgroundColor: '#60A5FA', transform: 'translate(50%, 50%)' }} />
@@ -82,7 +85,8 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
       {/* Mobile menu overlay */}
       {mobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm"
+          className="fixed inset-0 z-40 md:hidden backdrop-blur-sm"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
@@ -225,7 +229,7 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
         </header>
 
         {/* Page Content */}
-        <main className="p-4 md:p-6 lg:p-8">
+        <main className="p-4 md:p-6 lg:p-8 relative z-10">
           {children}
         </main>
       </div>
