@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import AppLayout from '@/components/AppLayout';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -89,7 +90,7 @@ export default function InventoryPage() {
   // Filters
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
-  const [dateBasis, setDateBasis] = useState<'purchase_date' | 'created_at'>('purchase_date');
+  const [dateBasis, setDateBasis] = useState<'purchase_date' | 'created_at'>('created_at');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedReceipt, setSelectedReceipt] = useState<string>('all');
   const [selectedPaidBy, setSelectedPaidBy] = useState<string>('all');
@@ -163,7 +164,6 @@ export default function InventoryPage() {
             const photoResponse = await fetch(`/api/inventory/photo-url?path=${encodeURIComponent(item.photo_path!)}`);
             const photoResult: PhotoUrlResponse | PhotoUrlErrorResponse = await photoResponse.json();
             
-            // API returns { url: string } on success
             if (photoResponse.ok && 'url' in photoResult && typeof photoResult.url === 'string') {
               return { id: item.id, url: photoResult.url };
             }
@@ -187,6 +187,25 @@ export default function InventoryPage() {
     }
     setLoading(false);
   };
+
+  const fetchUser = async () => {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id, full_name, username, designation')
+        .eq('id', user.id)
+        .single();
+      setCurrentUser(profile);
+    }
+  };
+
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  useEffect(() => {
+    fetchUser();
+  }, []);
 
   const handleAddCategory = async () => {
     if (!categoryName.trim()) return;
@@ -572,7 +591,7 @@ export default function InventoryPage() {
   };
 
   return (
-    <AppLayout>
+    <AppLayout profile={currentUser}>
       <div className="space-y-6 pb-20 md:pb-0">
         {/* Header */}
         <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-md border border-white/30 p-6">

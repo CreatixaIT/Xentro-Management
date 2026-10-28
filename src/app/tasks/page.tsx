@@ -13,7 +13,7 @@ export default async function TasksPage() {
   // Get user profile
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name, designation')
+    .select('id, full_name, username, designation')
     .eq('id', user.id)
     .single();
 

@@ -14,7 +14,9 @@ interface AppLayoutProps {
   children: React.ReactNode;
   profile?: {
     full_name: string;
+    username: string;
     designation: string;
+    id: string;
   } | null;
 }
 
@@ -67,9 +69,12 @@ export default function AppLayout({ children, profile }: AppLayoutProps) {
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-500 flex items-center justify-center">
                 <span className="text-xl">👤</span>
               </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-gray-900">{profile?.full_name || 'User'}</p>
-                <p className="text-xs text-gray-600">{profile?.designation || 'Employee'}</p>
+              <div className="ml-3 min-w-0 flex-1">
+                <p className="text-sm font-medium text-gray-900 truncate">{profile?.full_name || 'User'}</p>
+                <p className="text-xs text-gray-600 truncate">@{profile?.username || 'user'}</p>
+                <p className="text-xs text-gray-500 truncate" title={profile?.id || ''}>
+                  ID: {profile?.id ? `${profile.id.slice(0, 8)}...` : 'Unknown'}
+                </p>
               </div>
             </div>
             <form action="/auth/sign-out" method="post" className="mt-4">
@@ -134,9 +139,12 @@ export default function AppLayout({ children, profile }: AppLayoutProps) {
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-500 flex items-center justify-center">
                     <span className="text-xl">👤</span>
                   </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">{profile?.full_name || 'User'}</p>
-                    <p className="text-xs text-gray-600">{profile?.designation || 'Employee'}</p>
+                  <div className="ml-3 min-w-0 flex-1">
+                    <p className="text-sm font-medium text-gray-900 truncate">{profile?.full_name || 'User'}</p>
+                    <p className="text-xs text-gray-600 truncate">@{profile?.username || 'user'}</p>
+                    <p className="text-xs text-gray-500 truncate" title={profile?.id || ''}>
+                      ID: {profile?.id ? `${profile.id.slice(0, 8)}...` : 'Unknown'}
+                    </p>
                   </div>
                 </div>
                 <form action="/auth/sign-out" method="post">
