@@ -82,19 +82,20 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // Fetch creator usernames
+  // Fetch creator usernames using secure database function
   const creatorIds = inventory.map(item => item.created_by).filter(Boolean);
   const creatorMap = new Map<string, { username: string; full_name: string }>();
   
   if (creatorIds.length > 0) {
-    const { data: creators } = await supabase
-      .from('profiles')
-      .select('id, username, full_name')
-      .in('id', creatorIds);
+    const { data: creators, error: creatorsError } = await supabase
+      .rpc('get_inventory_creator_names', { creator_ids: creatorIds });
     
-    if (creators) {
-      creators.forEach(creator => {
-        creatorMap.set(creator.id, { username: creator.username, full_name: creator.full_name });
+    if (creatorsError) {
+      console.error('Error fetching creator names:', creatorsError);
+      // Continue without creator names on error (will show Unknown)
+    } else if (creators) {
+      creators.forEach((creator: { profile_id: string; username: string; full_name: string }) => {
+        creatorMap.set(creator.profile_id, { username: creator.username, full_name: creator.full_name });
       });
     }
   }
@@ -102,7 +103,7 @@ export async function GET(request: Request) {
   // Attach creator info to inventory items
   const inventoryWithCreators = inventory.map(item => ({
     ...item,
-    creator: item.created_by ? creatorMap.get(item.created_by) || null : null,
+    creator: item.created_by ? creatorMap.get(item.created_by as string) || null : null,
   }));
 
   return NextResponse.json({ inventory: inventoryWithCreators });
