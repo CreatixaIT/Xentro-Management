@@ -30,7 +30,8 @@
       "Exec(source)",
       "Exec(ls)",
       "Exec(npm list)",
-      "Exec(gh pr)"
+      "Exec(gh pr)",
+      "Exec(od)"
     ]
   }
 }
