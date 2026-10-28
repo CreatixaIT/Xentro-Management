@@ -81,10 +81,13 @@ export async function GET(request: Request) {
 
 function getDateRange(period: string, dateParam: string | null): { startDate: string; endDate: string } {
   const now = dateParam ? new Date(dateParam) : new Date();
-  const timeZone = 'Asia/Dhaka';
 
+  // Helper to format date in Asia/Dhaka timezone as YYYY-MM-DD
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-CA', { timeZone }); // en-CA gives YYYY-MM-DD
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   switch (period) {
@@ -93,7 +96,7 @@ function getDateRange(period: string, dateParam: string | null): { startDate: st
       return { startDate, endDate: startDate };
     }
     case 'week': {
-      // Get Monday of the week
+      // Get Monday of the week (adjusting for Bangladesh where week starts Sunday)
       const day = now.getDay();
       const diff = now.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Sunday
       const monday = new Date(now);
@@ -150,6 +153,14 @@ function calculateSummary(
   let absentDays = 0;
   let totalMinutes = 0;
 
+  // Helper to format date as YYYY-MM-DD
+  const formatDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   // Build a set of dates with approved leave
   const approvedLeaveDates = new Set<string>();
   const pendingLeaveDates = new Set<string>();
@@ -189,18 +200,25 @@ function calculateSummary(
   const end = new Date(endDate);
   let totalBusinessDays = 0;
 
+  // Get today's date in Asia/Dhaka to exclude future dates from absence
+  const today = new Date();
+  const todayStr = formatDate(today);
+
   const current = new Date(start);
   while (current <= end) {
     const day = current.getDay();
+    const dateStr = formatDate(current);
+    
     // In Bangladesh, Friday (5) and Saturday (6) are weekends
     // Business days: Sunday (0), Monday (1), Tuesday (2), Wednesday (3), Thursday (4)
-    if (day !== 5 && day !== 6) {
+    // Also exclude future dates from business day count for absence calculation
+    if (day !== 5 && day !== 6 && dateStr <= todayStr) {
       totalBusinessDays++;
     }
     current.setDate(current.getDate() + 1);
   }
 
-  // Absent = business days - present - approved leave - pending leave
+  // Absent = business days (excluding future) - present - approved leave - pending leave
   absentDays = Math.max(0, totalBusinessDays - presentDays - approvedLeaveDays - pendingLeaveDays);
 
   const totalHours = totalMinutes / 60;

@@ -63,6 +63,8 @@ export default function AdminAttendanceClient({ profile }: { profile: any }) {
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const [summary, setSummary] = useState<Summary | null>(null);
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState<string | null>(null);
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -240,6 +242,43 @@ export default function AdminAttendanceClient({ profile }: { profile: any }) {
     }
   };
 
+  const getCalendarDays = () => {
+    const year = calendarMonth.getFullYear();
+    const month = calendarMonth.getMonth();
+    
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    
+    const startDay = firstDay.getDay(); // 0 = Sunday, 6 = Saturday
+    const totalDays = lastDay.getDate();
+    
+    const days = [];
+    
+    // Add empty cells for days before the first day of the month
+    for (let i = 0; i < startDay; i++) {
+      days.push({ date: null, isEmpty: true });
+    }
+    
+    // Add actual days
+    for (let day = 1; day <= totalDays; day++) {
+      const date = new Date(year, month, day);
+      const dateStr = formatDate(date);
+      days.push({ date: dateStr, isEmpty: false });
+    }
+    
+    return days;
+  };
+
+  const handleCalendarMonthChange = (direction: 'prev' | 'next') => {
+    const newMonth = new Date(calendarMonth);
+    newMonth.setMonth(newMonth.getMonth() + (direction === 'next' ? 1 : -1));
+    setCalendarMonth(newMonth);
+  };
+
+  const handleDateSelect = (dateStr: string) => {
+    setSelectedCalendarDate(dateStr);
+  };
+
   const generatePDF = () => {
     if (!selectedEmployee || !summary) return;
 
@@ -249,23 +288,38 @@ export default function AdminAttendanceClient({ profile }: { profile: any }) {
     doc.setFontSize(18);
     doc.text('Xentro Management - Attendance Report', 14, 15);
 
+    // Generation timestamp in Asia/Dhaka
+    const generationDate = new Date().toLocaleDateString('en-US', {
+      timeZone: 'Asia/Dhaka',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+    const generationTime = new Date().toLocaleTimeString('en-US', {
+      timeZone: 'Asia/Dhaka',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+
     // Employee info
     doc.setFontSize(12);
     doc.text(`Employee: ${selectedEmployee.full_name} (@${selectedEmployee.username})`, 14, 25);
     doc.text(`Designation: ${selectedEmployee.designation}`, 14, 32);
     doc.text(`Period: ${period.charAt(0).toUpperCase() + period.slice(1)} - ${formatDate(selectedDate)}`, 14, 39);
+    doc.text(`Generated: ${generationDate} at ${generationTime} (Asia/Dhaka)`, 14, 46);
 
     // Summary
     doc.setFontSize(14);
-    doc.text('Summary', 14, 50);
+    doc.text('Summary', 14, 58);
 
     doc.setFontSize(10);
-    doc.text(`Present Days: ${summary.presentDays}`, 14, 58);
-    doc.text(`Approved Leave Days: ${summary.approvedLeaveDays}`, 14, 65);
-    doc.text(`Pending Leave Days: ${summary.pendingLeaveDays}`, 14, 72);
-    doc.text(`Absent Days: ${summary.absentDays}`, 14, 79);
-    doc.text(`Total Working Hours: ${summary.totalHours.toFixed(2)}h`, 14, 86);
-    doc.text(`Avg Hours/Day: ${summary.avgHoursPerPresentDay.toFixed(2)}h`, 14, 93);
+    doc.text(`Present Days: ${summary.presentDays}`, 14, 66);
+    doc.text(`Approved Leave Days: ${summary.approvedLeaveDays}`, 14, 73);
+    doc.text(`Pending Leave Days: ${summary.pendingLeaveDays}`, 14, 80);
+    doc.text(`Absent Days: ${summary.absentDays}`, 14, 87);
+    doc.text(`Total Working Hours: ${summary.totalHours.toFixed(2)}h`, 14, 94);
+    doc.text(`Avg Hours/Day: ${summary.avgHoursPerPresentDay.toFixed(2)}h`, 14, 101);
 
     // Attendance table
     const tableData = attendance.map(record => [
@@ -280,7 +334,7 @@ export default function AdminAttendanceClient({ profile }: { profile: any }) {
     autoTable(doc, {
       head: [['Date', 'Day', 'Status', 'Sign In', 'Sign Out', 'Duration']],
       body: tableData,
-      startY: 105,
+      startY: 113,
       styles: { fontSize: 8 },
       headStyles: { fillColor: [20, 27, 45] },
     });
@@ -527,6 +581,199 @@ export default function AdminAttendanceClient({ profile }: { profile: any }) {
                   </PieChart>
                 </ResponsiveContainer>
               </div>
+            </div>
+          )}
+
+          {/* Interactive Calendar */}
+          {summary && (
+            <div
+              className="p-6 rounded-lg"
+              style={{ backgroundColor: 'rgba(20, 27, 45, 0.72)', border: '1px solid rgba(255, 255, 255, 0.1)' }}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold" style={{ color: '#F4F7FF' }}>
+                  Attendance Calendar
+                </h3>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleCalendarMonthChange('prev')}
+                    className="p-2 rounded-lg transition-colors"
+                    style={{ backgroundColor: 'rgba(20, 27, 45, 0.72)', color: '#F4F7FF' }}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <span className="font-medium" style={{ color: '#F4F7FF' }}>
+                    {calendarMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                  </span>
+                  <button
+                    onClick={() => handleCalendarMonthChange('next')}
+                    className="p-2 rounded-lg transition-colors"
+                    style={{ backgroundColor: 'rgba(20, 27, 45, 0.72)', color: '#F4F7FF' }}
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Calendar Grid */}
+              <div className="grid grid-cols-7 gap-1 mb-4">
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                  <div key={day} className="text-center text-sm font-medium p-2" style={{ color: '#B4BED1' }}>
+                    {day}
+                  </div>
+                ))}
+                {getCalendarDays().map((day, index) => {
+                  if (day.isEmpty || !day.date) {
+                    return <div key={index} className="p-2" />;
+                  }
+                  const status = getDayStatus(day.date);
+                  const isSelected = selectedCalendarDate === day.date;
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => handleDateSelect(day.date)}
+                      className={`p-2 rounded-lg text-sm transition-colors ${
+                        isSelected ? 'ring-2 ring-purple-500' : ''
+                      } ${getDayColor(status)}`}
+                      style={{ color: '#F4F7FF' }}
+                    >
+                      {new Date(day.date).getDate()}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Calendar Legend */}
+              <div className="flex flex-wrap gap-4 text-xs" style={{ color: '#B4BED1' }}>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded" style={{ backgroundColor: '#10B981' }} />
+                  <span>Present</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded" style={{ backgroundColor: '#8B5CF6' }} />
+                  <span>Approved Leave</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded" style={{ backgroundColor: '#F59E0B' }} />
+                  <span>Pending Leave</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded" style={{ backgroundColor: '#EF4444' }} />
+                  <span>Absent</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded" style={{ backgroundColor: '#6B7280' }} />
+                  <span>Weekend</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded" style={{ backgroundColor: '#374151' }} />
+                  <span>Future</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Selected Date Detail Panel */}
+          {selectedCalendarDate && summary && (
+            <div
+              className="p-6 rounded-lg"
+              style={{ backgroundColor: 'rgba(20, 27, 45, 0.72)', border: '1px solid rgba(255, 255, 255, 0.1)' }}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold" style={{ color: '#F4F7FF' }}>
+                  {selectedCalendarDate ? formatDate(new Date(selectedCalendarDate)) : ''}
+                </h3>
+                <button
+                  onClick={() => setSelectedCalendarDate(null)}
+                  className="text-sm"
+                  style={{ color: '#8995AD' }}
+                >
+                  Close
+                </button>
+              </div>
+
+              {(() => {
+                if (!selectedCalendarDate) return null;
+                
+                const status = getDayStatus(selectedCalendarDate);
+                const attendanceRecord = attendance.find(a => a.business_date === selectedCalendarDate);
+                const leaveRecord = leaveRequests.find(lr => {
+                  const start = new Date(lr.start_date);
+                  const end = new Date(lr.end_date);
+                  const current = new Date(selectedCalendarDate);
+                  return current >= start && current <= end;
+                });
+
+                return (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span style={{ color: '#B4BED1' }}>Status:</span>
+                      <span
+                        className="px-3 py-1 rounded-full text-sm font-medium"
+                        style={{
+                          backgroundColor:
+                            status === 'present' ? 'rgba(16, 185, 129, 0.2)' :
+                            status === 'approvedLeave' ? 'rgba(139, 92, 246, 0.2)' :
+                            status === 'pendingLeave' ? 'rgba(245, 158, 11, 0.2)' :
+                            status === 'absent' ? 'rgba(239, 68, 68, 0.2)' :
+                            status === 'weekend' ? 'rgba(107, 114, 128, 0.2)' :
+                            'rgba(55, 65, 81, 0.2)',
+                          color:
+                            status === 'present' ? '#10B981' :
+                            status === 'approvedLeave' ? '#8B5CF6' :
+                            status === 'pendingLeave' ? '#F59E0B' :
+                            status === 'absent' ? '#EF4444' :
+                            status === 'weekend' ? '#6B7280' :
+                            '#9CA3AF',
+                        }}
+                      >
+                        {status === 'present' ? 'Present' :
+                         status === 'approvedLeave' ? 'Approved Leave' :
+                         status === 'pendingLeave' ? 'Pending Leave' :
+                         status === 'absent' ? 'Absent' :
+                         status === 'weekend' ? 'Weekend' :
+                         'Future'}
+                      </span>
+                    </div>
+
+                    {attendanceRecord && (
+                      <>
+                        <div className="flex items-center justify-between">
+                          <span style={{ color: '#B4BED1' }}>Sign In:</span>
+                          <span style={{ color: '#F4F7FF' }}>{formatTime(attendanceRecord.time_in)}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span style={{ color: '#B4BED1' }}>Sign Out:</span>
+                          <span style={{ color: '#F4F7FF' }}>{formatTime(attendanceRecord.time_out)}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span style={{ color: '#B4BED1' }}>Duration:</span>
+                          <span style={{ color: '#F4F7FF' }}>{formatDuration(attendanceRecord.work_duration_minutes)}</span>
+                        </div>
+                      </>
+                    )}
+
+                    {leaveRecord && (
+                      <>
+                        <div className="flex items-center justify-between">
+                          <span style={{ color: '#B4BED1' }}>Leave Type:</span>
+                          <span style={{ color: '#F4F7FF' }}>{leaveRecord.status}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span style={{ color: '#B4BED1' }}>Reason:</span>
+                          <span style={{ color: '#F4F7FF' }} className="max-w-xs truncate">{leaveRecord.reason}</span>
+                        </div>
+                      </>
+                    )}
+
+                    {!attendanceRecord && !leaveRecord && status === 'absent' && (
+                      <div style={{ color: '#8995AD' }}>
+                        No attendance or leave record for this date
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           )}
 
