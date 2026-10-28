@@ -144,34 +144,34 @@ export default function AdminResetRequestsClient({ profile }: AdminResetRequests
 
   return (
     <AdminLayout profile={profile}>
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-white">Password Reset Requests</h1>
+      <div className="space-y-4 md:space-y-6">
+        <h1 className="text-xl md:text-2xl font-bold text-white">Password Reset Requests</h1>
 
         <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[600px]">
               <thead className="bg-white/5">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-white">Username</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-white">Name</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-white">Email</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-white">Designation</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-white">Requested</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-white">Status</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-white">Actions</th>
+                  <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs md:text-sm font-semibold text-white">Username</th>
+                  <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs md:text-sm font-semibold text-white">Name</th>
+                  <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs md:text-sm font-semibold text-white">Email</th>
+                  <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs md:text-sm font-semibold text-white">Designation</th>
+                  <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs md:text-sm font-semibold text-white">Requested</th>
+                  <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs md:text-sm font-semibold text-white">Status</th>
+                  <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs md:text-sm font-semibold text-white">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {requests.map((req) => (
                   <tr key={req.id} className="border-t border-white/10 hover:bg-white/5 transition-colors">
-                    <td className="px-4 py-3 text-white">{req.profiles.username}</td>
-                    <td className="px-4 py-3 text-white">{req.profiles.full_name}</td>
-                    <td className="px-4 py-3 text-white/70">{req.profiles.email}</td>
-                    <td className="px-4 py-3 text-white/70">{req.profiles.designation}</td>
-                    <td className="px-4 py-3 text-white/70">
+                    <td className="px-3 md:px-4 py-2 md:py-3 text-white text-xs md:text-sm">{req.profiles.username}</td>
+                    <td className="px-3 md:px-4 py-2 md:py-3 text-white text-xs md:text-sm">{req.profiles.full_name}</td>
+                    <td className="px-3 md:px-4 py-2 md:py-3 text-white/70 text-xs md:text-sm">{req.profiles.email}</td>
+                    <td className="px-3 md:px-4 py-2 md:py-3 text-white/70 text-xs md:text-sm">{req.profiles.designation}</td>
+                    <td className="px-3 md:px-4 py-2 md:py-3 text-white/70 text-xs md:text-sm">
                       {new Date(req.requested_at).toLocaleString()}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-3 md:px-4 py-2 md:py-3">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                         req.status === 'PENDING' ? 'bg-yellow-500/20 text-yellow-400' :
                         req.status === 'APPROVED' ? 'bg-blue-500/20 text-blue-400' :
@@ -180,18 +180,18 @@ export default function AdminResetRequestsClient({ profile }: AdminResetRequests
                         {req.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-3 md:px-4 py-2 md:py-3">
                       {req.status === 'PENDING' && (
                         <>
                           <button
                             onClick={() => openResetModal(req)}
-                            className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 px-3 py-1 rounded text-sm mr-2 transition-colors"
+                            className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 px-2 md:px-3 py-1 rounded text-xs md:text-sm mr-1 md:mr-2 transition-colors"
                           >
                             Reset Password
                           </button>
                           <button
                             onClick={() => handleAction(req.id, 'REJECT')}
-                            className="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-3 py-1 rounded text-sm transition-colors"
+                            className="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-2 md:px-3 py-1 rounded text-xs md:text-sm transition-colors"
                           >
                             Reject
                           </button>
@@ -204,7 +204,7 @@ export default function AdminResetRequestsClient({ profile }: AdminResetRequests
             </table>
           </div>
           {requests.length === 0 && (
-            <div className="p-8 text-center text-white/50">No pending reset requests</div>
+            <div className="p-6 md:p-8 text-center text-white/50 text-xs md:text-sm">No pending reset requests</div>
           )}
         </div>
       </div>

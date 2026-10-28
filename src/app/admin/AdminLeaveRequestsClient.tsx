@@ -135,26 +135,26 @@ export default function AdminLeaveRequestsClient({ profile }: AdminLeaveRequests
 
   return (
     <AdminLayout profile={profile}>
-      <div className="space-y-6">
+      <div className="space-y-4 md:space-y-6">
         {!tableExists && (
-          <div className="bg-yellow-500/20 border border-yellow-500/50 text-yellow-200 px-4 py-3 rounded-xl backdrop-blur-xl">
+          <div className="bg-yellow-500/20 border border-yellow-500/50 text-yellow-200 px-3 md:px-4 py-2 md:py-3 rounded-xl backdrop-blur-xl text-xs md:text-sm">
             Leave requests table not found. Please apply migration 017 to enable this feature.
           </div>
         )}
         {error && tableExists && (
-          <div className="bg-red-500/20 border border-red-500/50 text-red-200 px-4 py-3 rounded-xl backdrop-blur-xl">
+          <div className="bg-red-500/20 border border-red-500/50 text-red-200 px-3 md:px-4 py-2 md:py-3 rounded-xl backdrop-blur-xl text-xs md:text-sm">
             {error}
           </div>
         )}
 
         {/* Filter */}
-        <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-4">
+        <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-3 md:p-4">
           <div className="flex gap-2">
             {(['pending', 'processed'] as const).map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 ${
+                className={`px-3 md:px-4 py-2 rounded-xl font-medium transition-all duration-200 text-xs md:text-sm ${
                   filter === f
                     ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white shadow-lg'
                     : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white'
@@ -169,42 +169,42 @@ export default function AdminLeaveRequestsClient({ profile }: AdminLeaveRequests
         {/* Requests Table */}
         <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl overflow-hidden">
           {requests.length === 0 ? (
-            <div className="text-center py-12">
-              <span className="text-4xl">📅</span>
-              <p className="text-white/50 mt-4">No leave requests found</p>
+            <div className="text-center py-8 md:py-12">
+              <span className="text-3xl md:text-4xl">📅</span>
+              <p className="text-white/50 mt-3 md:mt-4 text-xs md:text-sm">No leave requests found</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-[600px]">
                 <thead>
                   <tr className="border-b border-white/10 bg-white/5">
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-white">Employee</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-white">Date Range</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-white">Reason</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-white">Status</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-white">Submitted</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-white">Actions</th>
+                    <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs md:text-sm font-semibold text-white">Employee</th>
+                    <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs md:text-sm font-semibold text-white">Date Range</th>
+                    <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs md:text-sm font-semibold text-white">Reason</th>
+                    <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs md:text-sm font-semibold text-white">Status</th>
+                    <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs md:text-sm font-semibold text-white">Submitted</th>
+                    <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs md:text-sm font-semibold text-white">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {requests.map((request) => (
                     <tr key={request.id} className="border-b border-white/10 hover:bg-white/5 transition-colors">
-                      <td className="px-4 py-3">
+                      <td className="px-3 md:px-4 py-2 md:py-3">
                         <div>
-                          <p className="font-medium text-white">{request.employee_name}</p>
+                          <p className="font-medium text-white text-xs md:text-sm">{request.employee_name}</p>
                           {request.employee_username && (
-                            <p className="text-sm text-white/60">@{request.employee_username}</p>
+                            <p className="text-xs md:text-sm text-white/60">@{request.employee_username}</p>
                           )}
                           <p className="text-xs text-white/50">ID: {request.employee_profile_id}</p>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-sm text-white/70">
+                      <td className="px-3 md:px-4 py-2 md:py-3 text-sm text-white/70">
                         {request.start_date} to {request.end_date}
                       </td>
-                      <td className="px-4 py-3 text-sm max-w-xs truncate text-white/70">
+                      <td className="px-3 md:px-4 py-2 md:py-3 text-sm max-w-xs truncate text-white/70">
                         {request.reason}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 md:px-4 py-2 md:py-3">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                           request.status === 'PENDING' ? 'bg-yellow-500/20 text-yellow-400' :
                           request.status === 'APPROVED' ? 'bg-green-500/20 text-green-400' :
@@ -214,10 +214,10 @@ export default function AdminLeaveRequestsClient({ profile }: AdminLeaveRequests
                           {request.status}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-sm text-white/70">
+                      <td className="px-3 md:px-4 py-2 md:py-3 text-sm text-white/70">
                         {new Date(request.created_at).toLocaleDateString()}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 md:px-4 py-2 md:py-3">
                         {request.status === 'PENDING' ? (
                           <div className="space-y-2">
                             <textarea
@@ -231,21 +231,21 @@ export default function AdminLeaveRequestsClient({ profile }: AdminLeaveRequests
                               <button
                                 onClick={() => handleApprove(request.id)}
                                 disabled={processing === request.id}
-                                className="px-3 py-1 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded text-sm disabled:opacity-50 transition-colors"
+                                className="px-2 md:px-3 py-1 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded text-xs md:text-sm disabled:opacity-50 transition-colors"
                               >
                                 {processing === request.id ? 'Processing...' : 'Approve'}
                               </button>
                               <button
                                 onClick={() => handleReject(request.id)}
                                 disabled={processing === request.id}
-                                className="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded text-sm disabled:opacity-50 transition-colors"
+                                className="px-2 md:px-3 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded text-xs md:text-sm disabled:opacity-50 transition-colors"
                               >
                                 {processing === request.id ? 'Processing...' : 'Reject'}
                               </button>
                             </div>
                           </div>
                         ) : (
-                          <div className="text-sm text-white/60">
+                          <div className="text-xs md:text-sm text-white/60">
                             {request.admin_remarks && (
                               <p className="mb-1">Remarks: {request.admin_remarks}</p>
                             )}

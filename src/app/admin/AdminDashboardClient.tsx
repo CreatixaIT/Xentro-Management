@@ -85,9 +85,9 @@ export default function AdminDashboardClient({ profile }: AdminDashboardClientPr
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
         <StatCard
           title="Total Employees"
           value={stats?.totalEmployees || 0}
@@ -126,11 +126,11 @@ export default function AdminDashboardClient({ profile }: AdminDashboardClientPr
       </div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         {/* Employee Status Chart */}
-        <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-6 hover:shadow-3xl transition-shadow duration-300">
-          <h3 className="text-lg font-semibold text-white mb-4">Employee Status Distribution</h3>
-          <div className="h-64">
+        <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-4 md:p-6 hover:shadow-3xl transition-shadow duration-300">
+          <h3 className="text-base md:text-lg font-semibold text-white mb-3 md:mb-4">Employee Status Distribution</h3>
+          <div className="h-48 md:h-64">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -139,7 +139,7 @@ export default function AdminDashboardClient({ profile }: AdminDashboardClientPr
                   cy="50%"
                   label={(entry: any) => `${entry.name}: ${entry.percent ? (entry.percent * 100).toFixed(0) : 0}%`}
                   labelLine={false}
-                  outerRadius={80}
+                  outerRadius={60}
                   fill="#8884d8"
                   dataKey="value"
                 >
@@ -161,14 +161,14 @@ export default function AdminDashboardClient({ profile }: AdminDashboardClientPr
         </div>
 
         {/* Registration Trend Chart */}
-        <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-6 hover:shadow-3xl transition-shadow duration-300">
-          <h3 className="text-lg font-semibold text-white mb-4">Registration Trend (Last 30 Days)</h3>
-          <div className="h-64">
+        <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-4 md:p-6 hover:shadow-3xl transition-shadow duration-300">
+          <h3 className="text-base md:text-lg font-semibold text-white mb-3 md:mb-4">Registration Trend (Last 30 Days)</h3>
+          <div className="h-48 md:h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={registrationData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
-                <XAxis dataKey="date" stroke="rgba(255, 255, 255, 0.7)" />
-                <YAxis stroke="rgba(255, 255, 255, 0.7)" />
+                <XAxis dataKey="date" stroke="rgba(255, 255, 255, 0.7)" tick={{ fontSize: 10 }} />
+                <YAxis stroke="rgba(255, 255, 255, 0.7)" tick={{ fontSize: 10 }} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: 'rgba(15, 23, 42, 0.9)',
@@ -191,7 +191,7 @@ export default function AdminDashboardClient({ profile }: AdminDashboardClientPr
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         <ActionCard
           title="User Management"
           description="View and manage employee accounts"
@@ -213,22 +213,22 @@ export default function AdminDashboardClient({ profile }: AdminDashboardClientPr
       </div>
 
       {/* Recent Registrations */}
-      <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-6 hover:shadow-3xl transition-shadow duration-300">
-        <h3 className="text-lg font-semibold text-white mb-4">Recent Registrations (Last 30 Days)</h3>
+      <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-4 md:p-6 hover:shadow-3xl transition-shadow duration-300">
+        <h3 className="text-base md:text-lg font-semibold text-white mb-3 md:mb-4">Recent Registrations (Last 30 Days)</h3>
         {stats?.registrationsByDate && Object.keys(stats.registrationsByDate).length > 0 ? (
           <div className="space-y-2">
             {Object.entries(stats.registrationsByDate)
               .sort((a, b) => b[0].localeCompare(a[0]))
               .slice(0, 10)
               .map(([date, count]) => (
-                <div key={date} className="flex justify-between items-center text-sm p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                <div key={date} className="flex justify-between items-center text-xs md:text-sm p-2 md:p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
                   <span className="text-white/70">{new Date(date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
                   <span className="font-semibold text-yellow-400">{count} new registrations</span>
                 </div>
               ))}
           </div>
         ) : (
-          <p className="text-white/50 text-sm">No recent registrations</p>
+          <p className="text-white/50 text-xs md:text-sm">No recent registrations</p>
         )}
       </div>
     </div>
@@ -251,14 +251,14 @@ function StatCard({
   return (
     <Link
       href={href}
-      className="block bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-6 hover:scale-105 hover:shadow-3xl transition-all duration-300 group"
+      className="block bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-4 md:p-6 hover:scale-105 hover:shadow-3xl transition-all duration-300 group"
     >
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm font-medium text-white/70 mb-2">{title}</p>
-          <p className="text-3xl font-bold text-white group-hover:text-yellow-400 transition-colors">{value}</p>
+          <p className="text-xs md:text-sm font-medium text-white/70 mb-1 md:mb-2">{title}</p>
+          <p className="text-2xl md:text-3xl font-bold text-white group-hover:text-yellow-400 transition-colors">{value}</p>
         </div>
-        <span className="text-4xl group-hover:scale-110 transition-transform">{icon}</span>
+        <span className="text-3xl md:text-4xl group-hover:scale-110 transition-transform">{icon}</span>
       </div>
     </Link>
   );
@@ -268,13 +268,13 @@ function ActionCard({ title, description, icon, href }: { title: string; descrip
   return (
     <Link
       href={href}
-      className="block bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-6 hover:bg-white/20 hover:scale-105 hover:shadow-3xl transition-all duration-300 group"
+      className="block bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-4 md:p-6 hover:bg-white/20 hover:scale-105 hover:shadow-3xl transition-all duration-300 group"
     >
-      <div className="flex items-start gap-4">
-        <span className="text-4xl group-hover:scale-110 transition-transform">{icon}</span>
+      <div className="flex items-start gap-3 md:gap-4">
+        <span className="text-3xl md:text-4xl group-hover:scale-110 transition-transform">{icon}</span>
         <div>
-          <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-yellow-400 transition-colors">{title}</h3>
-          <p className="text-white/60 text-sm">{description}</p>
+          <h3 className="text-base md:text-lg font-semibold text-white mb-1 md:mb-2 group-hover:text-yellow-400 transition-colors">{title}</h3>
+          <p className="text-white/60 text-xs md:text-sm">{description}</p>
         </div>
       </div>
     </Link>

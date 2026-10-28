@@ -132,13 +132,13 @@ export default function AdminEmployeesClient({ profile }: AdminEmployeesClientPr
 
   return (
     <AdminLayout profile={profile}>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-white">User Management</h1>
+      <div className="space-y-4 md:space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
+          <h1 className="text-xl md:text-2xl font-bold text-white">User Management</h1>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl px-3 md:px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm md:text-base"
           >
             <option value="" className="bg-slate-900">All Status</option>
             <option value="PENDING" className="bg-slate-900">Pending</option>
@@ -149,31 +149,31 @@ export default function AdminEmployeesClient({ profile }: AdminEmployeesClientPr
 
         <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[600px]">
               <thead className="bg-white/5">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-white">Username</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-white">Name</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-white">Designation</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-white">Status</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-white">Role</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-white">Actions</th>
+                  <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs md:text-sm font-semibold text-white">Username</th>
+                  <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs md:text-sm font-semibold text-white">Name</th>
+                  <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs md:text-sm font-semibold text-white">Designation</th>
+                  <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs md:text-sm font-semibold text-white">Status</th>
+                  <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs md:text-sm font-semibold text-white">Role</th>
+                  <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs md:text-sm font-semibold text-white">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {employees.map((emp) => (
                   <tr key={emp.id} className="border-t border-white/10 hover:bg-white/5 transition-colors">
-                    <td className="px-4 py-3">
+                    <td className="px-3 md:px-4 py-2 md:py-3">
                       <button
                         onClick={() => openDetailsModal(emp)}
-                        className="text-yellow-400 hover:text-yellow-300 font-medium hover:underline"
+                        className="text-yellow-400 hover:text-yellow-300 font-medium hover:underline text-xs md:text-sm"
                       >
                         {emp.username}
                       </button>
                     </td>
-                    <td className="px-4 py-3 text-white">{emp.full_name}</td>
-                    <td className="px-4 py-3 text-white/70">{emp.designation}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-3 md:px-4 py-2 md:py-3 text-white text-xs md:text-sm">{emp.full_name}</td>
+                    <td className="px-3 md:px-4 py-2 md:py-3 text-white/70 text-xs md:text-sm">{emp.designation}</td>
+                    <td className="px-3 md:px-4 py-2 md:py-3">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                         emp.status === 'ACTIVE' ? 'bg-green-500/20 text-green-400' :
                         emp.status === 'PENDING' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'
@@ -181,18 +181,18 @@ export default function AdminEmployeesClient({ profile }: AdminEmployeesClientPr
                         {emp.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-white/70">{emp.role}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-3 md:px-4 py-2 md:py-3 text-white/70 text-xs md:text-sm">{emp.role}</td>
+                    <td className="px-3 md:px-4 py-2 md:py-3">
                       <button
                         onClick={() => openDetailsModal(emp)}
-                        className="text-blue-400 hover:text-blue-300 text-sm mr-3"
+                        className="text-blue-400 hover:text-blue-300 text-xs md:text-sm mr-2 md:mr-3"
                       >
                         View Details
                       </button>
                       {emp.status === 'PENDING' && (
                         <button
                           onClick={() => updateStatus(emp.id, 'ACTIVE')}
-                          className="bg-green-500/20 hover:bg-green-500/30 text-green-400 px-3 py-1 rounded text-sm mr-2 transition-colors"
+                          className="bg-green-500/20 hover:bg-green-500/30 text-green-400 px-2 md:px-3 py-1 rounded text-xs md:text-sm mr-1 md:mr-2 transition-colors"
                         >
                           Approve
                         </button>
@@ -200,7 +200,7 @@ export default function AdminEmployeesClient({ profile }: AdminEmployeesClientPr
                       {emp.status === 'ACTIVE' && (
                         <button
                           onClick={() => updateStatus(emp.id, 'SUSPENDED')}
-                          className="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-3 py-1 rounded text-sm mr-2 transition-colors"
+                          className="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-2 md:px-3 py-1 rounded text-xs md:text-sm mr-1 md:mr-2 transition-colors"
                         >
                           Suspend
                         </button>
@@ -208,7 +208,7 @@ export default function AdminEmployeesClient({ profile }: AdminEmployeesClientPr
                       {emp.status === 'SUSPENDED' && (
                         <button
                           onClick={() => updateStatus(emp.id, 'ACTIVE')}
-                          className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 px-3 py-1 rounded text-sm transition-colors"
+                          className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 px-2 md:px-3 py-1 rounded text-xs md:text-sm transition-colors"
                         >
                           Reactivate
                         </button>
@@ -220,7 +220,7 @@ export default function AdminEmployeesClient({ profile }: AdminEmployeesClientPr
             </table>
           </div>
           {employees.length === 0 && (
-            <div className="p-8 text-center text-white/50">No employees found</div>
+            <div className="p-6 md:p-8 text-center text-white/50 text-xs md:text-sm">No employees found</div>
           )}
         </div>
       </div>

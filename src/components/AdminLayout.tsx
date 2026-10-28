@@ -91,14 +91,14 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
       >
         <div className="h-full bg-white/10 backdrop-blur-xl rounded-2xl md:rounded-none border border-white/20 shadow-2xl flex flex-col overflow-hidden">
           {/* Logo */}
-          <div className="p-6 border-b border-white/10">
+          <div className="p-4 md:p-6 border-b border-white/10">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-lg">
-                <span className="text-xl font-bold text-white">X</span>
+              <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-lg">
+                <span className="text-lg md:text-xl font-bold text-white">X</span>
               </div>
               {!sidebarCollapsed && (
                 <div>
-                  <h1 className="text-lg font-bold text-white">Xentro</h1>
+                  <h1 className="text-base md:text-lg font-bold text-white">Xentro</h1>
                   <p className="text-xs text-white/60">Super Admin</p>
                 </div>
               )}
@@ -106,13 +106,13 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+          <nav className="flex-1 px-2 md:px-4 py-4 md:py-6 space-y-1 md:space-y-2 overflow-y-auto">
             {navigation.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center px-4 py-3 rounded-xl transition-all duration-200 group relative
+                className={`flex items-center px-3 md:px-4 py-2 md:py-3 rounded-xl transition-all duration-200 group relative
                   ${isActive(item.href)
                     ? 'bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-400 shadow-lg shadow-yellow-500/10'
                     : 'text-white/70 hover:bg-white/10 hover:text-white'
@@ -121,9 +121,9 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
                 `}
                 title={sidebarCollapsed ? item.name : ''}
               >
-                <span className="text-xl group-hover:scale-110 transition-transform">{item.icon}</span>
+                <span className="text-lg md:text-xl group-hover:scale-110 transition-transform">{item.icon}</span>
                 {!sidebarCollapsed && (
-                  <span className="ml-3 font-medium">{item.name}</span>
+                  <span className="ml-2 md:ml-3 font-medium text-sm md:text-base">{item.name}</span>
                 )}
                 {isActive(item.href) && (
                   <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-yellow-400 to-orange-500 rounded-l-xl" />
@@ -133,27 +133,27 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
           </nav>
 
           {/* Profile Section */}
-          <div className="p-4 border-t border-white/10">
+          <div className="p-3 md:p-4 border-t border-white/10">
             {profile && (
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-lg">
-                  <span className="text-lg">👤</span>
+              <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
+                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-lg">
+                  <span className="text-sm md:text-lg">👤</span>
                 </div>
                 {!sidebarCollapsed && (
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white truncate">{profile.full_name}</p>
+                    <p className="text-xs md:text-sm font-medium text-white truncate">{profile.full_name}</p>
                     <p className="text-xs text-white/60 truncate">@{profile.username}</p>
                   </div>
                 )}
               </div>
             )}
-            <form action="/auth/sign-out" method="post" className="mt-3">
+            <form action="/auth/sign-out" method="post" className="mt-2 md:mt-3">
               <button
                 type="submit"
-                className="w-full text-left px-4 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white rounded-xl transition-colors flex items-center gap-2"
+                className="w-full text-left px-3 md:px-4 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white rounded-xl transition-colors flex items-center gap-2"
               >
-                <span>🚪</span>
-                {!sidebarCollapsed && <span>Sign Out</span>}
+                <span className="text-sm md:text-base">🚪</span>
+                {!sidebarCollapsed && <span className="text-sm">Sign Out</span>}
               </button>
             </form>
           </div>
@@ -161,9 +161,9 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
           {/* Collapse Toggle */}
           <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform hidden md:flex"
+            className="absolute -right-3 top-1/2 -translate-y-1/2 w-5 h-5 md:w-6 md:h-6 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform hidden md:flex"
           >
-            <span className="text-xs text-white">
+            <span className="text-xs md:text-sm text-white">
               {sidebarCollapsed ? '→' : '←'}
             </span>
           </button>
@@ -173,10 +173,10 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
       {/* Main Content */}
       <div className="flex-1 md:ml-0">
         {/* Header */}
-        <header className="sticky top-0 z-30 px-4 md:px-8 py-4">
-          <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl px-6 py-4">
+        <header className="sticky top-0 z-30 px-3 md:px-4 lg:px-8 py-3 md:py-4">
+          <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl px-4 md:px-6 py-3 md:py-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 md:gap-4">
                 {/* Mobile menu button */}
                 <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -186,21 +186,21 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
                 </button>
 
                 <div>
-                  <h1 className="text-xl md:text-2xl font-bold text-white">
+                  <h1 className="text-lg md:text-xl lg:text-2xl font-bold text-white">
                     Welcome back, {profile?.full_name || 'Admin'}
                   </h1>
-                  <p className="text-sm text-white/60">{currentDate}</p>
+                  <p className="text-xs md:text-sm text-white/60 hidden sm:block">{currentDate}</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 md:gap-4">
                 <div className="hidden md:block text-right">
-                  <p className="text-2xl font-bold text-yellow-400">{currentTime}</p>
+                  <p className="text-xl md:text-2xl font-bold text-yellow-400">{currentTime}</p>
                   <p className="text-xs text-white/60">Dhaka Time</p>
                 </div>
                 {profile?.avatar_path && (
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-lg">
-                    <span className="text-xl">👤</span>
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-lg">
+                    <span className="text-lg md:text-xl">👤</span>
                   </div>
                 )}
               </div>
@@ -209,7 +209,7 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
         </header>
 
         {/* Page Content */}
-        <main className="p-4 md:p-8">
+        <main className="p-3 md:p-4 lg:p-8">
           {children}
         </main>
       </div>
