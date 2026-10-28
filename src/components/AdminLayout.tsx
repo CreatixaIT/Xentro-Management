@@ -206,7 +206,7 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 md:ml-0 relative z-10">
+      <div className="flex-1 md:ml-72 relative z-10 transition-all duration-300" style={{ marginLeft: sidebarCollapsed ? '5rem' : '' }}>
         {/* Header */}
         <header className="sticky top-0 z-30 px-3 md:px-4 lg:px-8 py-3 md:py-4">
           <div className="relative">
