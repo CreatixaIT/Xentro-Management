@@ -17,6 +17,18 @@ export default async function DashboardPage() {
     .eq('id', user.id)
     .single();
 
+  // Get signed URL for profile photo if available
+  let avatarUrl: string | null = null;
+  if (profile?.avatar_path) {
+    const { data, error } = await supabase
+      .storage
+      .from('profile-photos')
+      .createSignedUrl(profile.avatar_path, 60); // 60 seconds validity
+    if (!error && data) {
+      avatarUrl = data.signedUrl || null;
+    }
+  }
+
   // Get attendance for today
   const today = new Date().toISOString().split('T')[0];
   const { data: attendance } = await supabase
@@ -108,7 +120,18 @@ export default async function DashboardPage() {
               </h1>
               <p className="text-gray-600 mt-1">{currentDate}</p>
             </div>
-            <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-500 flex items-center justify-center">
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt="Profile"
+                className="w-12 h-12 md:w-16 md:h-16 rounded-full object-cover border-2 border-white shadow-md"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+            ) : null}
+            <div className={`w-12 h-12 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-500 flex items-center justify-center ${avatarUrl ? 'hidden' : ''}`}>
               <span className="text-2xl md:text-3xl">👤</span>
             </div>
           </div>

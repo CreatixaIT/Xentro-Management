@@ -437,7 +437,7 @@ export default function InventoryPage() {
           case 'category':
             return item.inventory_categories?.name || '—';
           case 'user_entry':
-            return item.creator?.username || '—';
+            return item.creator?.full_name || item.creator?.username || 'Unknown';
           case 'receipt':
             return item.receipt ? 'Yes' : 'No';
           case 'price':
@@ -672,7 +672,7 @@ export default function InventoryPage() {
                             <span className="w-10 h-10 md:w-12 md:h-12 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 text-xs">—</span>
                           )}
                           {col === 'category' && item.inventory_categories?.name}
-                          {col === 'user_entry' && item.creator?.username}
+                          {col === 'user_entry' && (item.creator?.full_name || item.creator?.username || 'Unknown')}
                           {col === 'receipt' && (item.receipt ? 'Yes' : 'No')}
                           {col === 'price' && `BDT ${item.price.toFixed(2)}`}
                           {col === 'unit_cost' && `BDT ${item.unit_cost.toFixed(2)}`}
