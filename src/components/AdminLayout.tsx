@@ -72,11 +72,16 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/50 to-slate-900 relative overflow-hidden">
+      {/* Background glow effects */}
+      <div className="fixed top-0 left-0 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+      <div className="fixed bottom-0 right-0 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
+      <div className="fixed top-1/2 left-1/2 w-96 h-96 bg-yellow-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+
       {/* Mobile menu overlay */}
       {mobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
@@ -89,7 +94,8 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
           ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         `}
       >
-        <div className="h-full bg-white/10 backdrop-blur-xl rounded-2xl md:rounded-none border border-white/20 shadow-2xl flex flex-col overflow-hidden">
+        <div className="relative h-full bg-white/10 backdrop-blur-xl rounded-2xl md:rounded-none border border-white/20 shadow-2xl flex flex-col overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-yellow-500/5 to-orange-500/5 pointer-events-none" />
           {/* Logo */}
           <div className="p-4 md:p-6 border-b border-white/10">
             <div className="flex items-center gap-3">
@@ -114,8 +120,8 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
                 onClick={() => setMobileMenuOpen(false)}
                 className={`flex items-center px-3 md:px-4 py-2 md:py-3 rounded-xl transition-all duration-200 group relative
                   ${isActive(item.href)
-                    ? 'bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-400 shadow-lg shadow-yellow-500/10'
-                    : 'text-white/70 hover:bg-white/10 hover:text-white'
+                    ? 'bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-400 shadow-lg shadow-yellow-500/10 border border-yellow-500/30'
+                    : 'text-white/70 hover:bg-white/10 hover:text-white hover:border-white/20 border border-transparent'
                   }
                   ${sidebarCollapsed ? 'justify-center' : ''}
                 `}
@@ -171,38 +177,41 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 md:ml-0">
+      <div className="flex-1 md:ml-0 relative z-10">
         {/* Header */}
         <header className="sticky top-0 z-30 px-3 md:px-4 lg:px-8 py-3 md:py-4">
-          <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl px-4 md:px-6 py-3 md:py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3 md:gap-4">
-                {/* Mobile menu button */}
-                <button
-                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="md:hidden p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
-                >
-                  <span className="text-xl">☰</span>
-                </button>
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-2xl blur-xl" />
+            <div className="relative bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl px-4 md:px-6 py-3 md:py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 md:gap-4">
+                  {/* Mobile menu button */}
+                  <button
+                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                    className="md:hidden p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                  >
+                    <span className="text-xl">☰</span>
+                  </button>
 
-                <div>
-                  <h1 className="text-lg md:text-xl lg:text-2xl font-bold text-white">
-                    Welcome back, {profile?.full_name || 'Admin'}
-                  </h1>
-                  <p className="text-xs md:text-sm text-white/60 hidden sm:block">{currentDate}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 md:gap-4">
-                <div className="hidden md:block text-right">
-                  <p className="text-xl md:text-2xl font-bold text-yellow-400">{currentTime}</p>
-                  <p className="text-xs text-white/60">Dhaka Time</p>
-                </div>
-                {profile?.avatar_path && (
-                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-lg">
-                    <span className="text-lg md:text-xl">👤</span>
+                  <div>
+                    <h1 className="text-lg md:text-xl lg:text-2xl font-bold text-white">
+                      Welcome back, {profile?.full_name || 'Admin'}
+                    </h1>
+                    <p className="text-xs md:text-sm text-white/60 hidden sm:block">{currentDate}</p>
                   </div>
-                )}
+                </div>
+
+                <div className="flex items-center gap-3 md:gap-4">
+                  <div className="hidden md:block text-right">
+                    <p className="text-xl md:text-2xl font-bold text-yellow-400">{currentTime}</p>
+                    <p className="text-xs text-white/60">Dhaka Time</p>
+                  </div>
+                  {profile?.avatar_path && (
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-lg">
+                      <span className="text-lg md:text-xl">👤</span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
