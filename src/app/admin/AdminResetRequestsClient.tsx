@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import AdminLayout from '@/components/AdminLayout';
+import { Key, X, Clock } from 'lucide-react';
 
 interface ResetRequest {
   id: string;
@@ -147,8 +148,8 @@ export default function AdminResetRequestsClient({ profile }: AdminResetRequests
       <div className="space-y-4 md:space-y-6">
         <h1 className="text-xl md:text-2xl font-bold text-white">Password Reset Requests</h1>
 
-        <div className="relative bg-white/5 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+        <div className="relative bg-white/[0.03] backdrop-blur-xl rounded-2xl border border-white/[0.08] shadow-2xl overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
           <div className="relative overflow-x-auto">
             <table className="w-full min-w-[600px]">
               <thead className="bg-white/5">
@@ -174,9 +175,9 @@ export default function AdminResetRequestsClient({ profile }: AdminResetRequests
                     </td>
                     <td className="px-3 md:px-4 py-2 md:py-3">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        req.status === 'PENDING' ? 'bg-red-500/20 text-red-400' :
-                        req.status === 'APPROVED' ? 'bg-yellow-500/20 text-yellow-400' :
-                        req.status === 'COMPLETED' ? 'bg-yellow-600/20 text-yellow-400' : 'bg-black/40 text-white'
+                        req.status === 'PENDING' ? 'bg-amber-500/20 text-amber-400' :
+                        req.status === 'APPROVED' ? 'bg-purple-500/20 text-purple-400' :
+                        req.status === 'COMPLETED' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-500/20 text-slate-400'
                       }`}>
                         {req.status}
                       </span>
@@ -186,13 +187,13 @@ export default function AdminResetRequestsClient({ profile }: AdminResetRequests
                         <>
                           <button
                             onClick={() => openResetModal(req)}
-                            className="bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 px-2 md:px-3 py-1 rounded text-xs md:text-sm mr-1 md:mr-2 transition-colors"
+                            className="bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 px-2 md:px-3 py-1 rounded text-xs md:text-sm mr-1 md:mr-2 transition-colors"
                           >
                             Reset Password
                           </button>
                           <button
                             onClick={() => handleAction(req.id, 'REJECT')}
-                            className="bg-black/40 hover:bg-black/50 text-white px-2 md:px-3 py-1 rounded text-xs md:text-sm transition-colors"
+                            className="bg-slate-500/20 hover:bg-slate-500/30 text-slate-400 px-2 md:px-3 py-1 rounded text-xs md:text-sm transition-colors"
                           >
                             Reject
                           </button>
@@ -213,8 +214,8 @@ export default function AdminResetRequestsClient({ profile }: AdminResetRequests
       {/* Reset Password Modal */}
       {showResetModal && selectedRequest && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="relative bg-white/5 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl p-6 max-w-md w-full">
-            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+          <div className="bg-white/[0.03] backdrop-blur-xl rounded-2xl border border-white/[0.08] shadow-2xl p-6 max-w-md w-full">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
             <div className="relative">
               <h2 className="text-xl font-bold mb-4 text-white">Reset Password</h2>
             
@@ -257,7 +258,7 @@ export default function AdminResetRequestsClient({ profile }: AdminResetRequests
                   type={showPassword ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500 backdrop-blur-xl"
+                  className="w-full px-4 py-2 rounded-xl bg-white/[0.03] border border-white/[0.08] text-white focus:outline-none focus:ring-2 focus:ring-purple-500 backdrop-blur-xl"
                   placeholder="Confirm new password"
                 />
               </div>
@@ -285,7 +286,7 @@ export default function AdminResetRequestsClient({ profile }: AdminResetRequests
                 <button
                   onClick={handleResetPassword}
                   disabled={isResetting || !newPassword || !confirmPassword}
-                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-red-500 to-yellow-500 hover:from-red-600 hover:to-yellow-600 text-white disabled:from-white/10 disabled:to-white/10 disabled:cursor-not-allowed transition-all"
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white disabled:from-white/10 disabled:to-white/10 disabled:cursor-not-allowed transition-all"
                 >
                   {isResetting ? 'Resetting...' : 'Reset Password'}
                 </button>

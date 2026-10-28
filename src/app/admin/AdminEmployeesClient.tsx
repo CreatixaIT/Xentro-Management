@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import AdminLayout from '@/components/AdminLayout';
+import { Search, UserCheck, UserX, Clock } from 'lucide-react';
 
 interface Employee {
   id: string;
@@ -147,8 +148,8 @@ export default function AdminEmployeesClient({ profile }: AdminEmployeesClientPr
           </select>
         </div>
 
-        <div className="relative bg-white/5 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+        <div className="relative bg-white/[0.03] backdrop-blur-xl rounded-2xl border border-white/[0.08] shadow-2xl overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
           <div className="relative overflow-x-auto">
             <table className="w-full min-w-[600px]">
               <thead className="bg-white/5">
@@ -176,8 +177,8 @@ export default function AdminEmployeesClient({ profile }: AdminEmployeesClientPr
                     <td className="px-3 md:px-4 py-2 md:py-3 text-white/70 text-xs md:text-sm">{emp.designation}</td>
                     <td className="px-3 md:px-4 py-2 md:py-3">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        emp.status === 'ACTIVE' ? 'bg-yellow-500/20 text-yellow-400' :
-                        emp.status === 'PENDING' ? 'bg-red-500/20 text-red-400' : 'bg-black/40 text-white'
+                        emp.status === 'ACTIVE' ? 'bg-emerald-500/20 text-emerald-400' :
+                        emp.status === 'PENDING' ? 'bg-amber-500/20 text-amber-400' : 'bg-slate-500/20 text-slate-400'
                       }`}>
                         {emp.status}
                       </span>
@@ -193,7 +194,7 @@ export default function AdminEmployeesClient({ profile }: AdminEmployeesClientPr
                       {emp.status === 'PENDING' && (
                         <button
                           onClick={() => updateStatus(emp.id, 'ACTIVE')}
-                          className="bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 px-2 md:px-3 py-1 rounded text-xs md:text-sm mr-1 md:mr-2 transition-colors"
+                          className="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 px-2 md:px-3 py-1 rounded text-xs md:text-sm mr-1 md:mr-2 transition-colors"
                         >
                           Approve
                         </button>
@@ -209,7 +210,7 @@ export default function AdminEmployeesClient({ profile }: AdminEmployeesClientPr
                       {emp.status === 'SUSPENDED' && (
                         <button
                           onClick={() => updateStatus(emp.id, 'ACTIVE')}
-                          className="bg-yellow-600/20 hover:bg-yellow-600/30 text-yellow-400 px-2 md:px-3 py-1 rounded text-xs md:text-sm transition-colors"
+                          className="bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 px-2 md:px-3 py-1 rounded text-xs md:text-sm transition-colors"
                         >
                           Reactivate
                         </button>

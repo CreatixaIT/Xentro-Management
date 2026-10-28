@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import AdminLayout from '@/components/AdminLayout';
+import { Check, X, Calendar, Clock } from 'lucide-react';
 
 interface LeaveRequest {
   id: string;
@@ -148,8 +149,8 @@ export default function AdminLeaveRequestsClient({ profile }: AdminLeaveRequests
         )}
 
         {/* Filter */}
-        <div className="relative bg-white/5 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl p-3 md:p-4 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+        <div className="relative bg-white/[0.03] backdrop-blur-xl rounded-2xl border border-white/[0.08] shadow-2xl p-3 md:p-4 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
           <div className="relative flex gap-2">
             {(['pending', 'processed'] as const).map((f) => (
               <button
@@ -168,8 +169,8 @@ export default function AdminLeaveRequestsClient({ profile }: AdminLeaveRequests
         </div>
 
         {/* Requests Table */}
-        <div className="relative bg-white/5 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+        <div className="relative bg-white/[0.03] backdrop-blur-xl rounded-2xl border border-white/[0.08] shadow-2xl overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
           <div className="relative">
             {requests.length === 0 ? (
             <div className="text-center py-8 md:py-12">
@@ -209,9 +210,9 @@ export default function AdminLeaveRequestsClient({ profile }: AdminLeaveRequests
                       </td>
                       <td className="px-3 md:px-4 py-2 md:py-3">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          request.status === 'PENDING' ? 'bg-red-500/20 text-red-400' :
-                          request.status === 'APPROVED' ? 'bg-yellow-500/20 text-yellow-400' :
-                          request.status === 'REJECTED' ? 'bg-black/40 text-white' :
+                          request.status === 'PENDING' ? 'bg-amber-500/20 text-amber-400' :
+                          request.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-400' :
+                          request.status === 'REJECTED' ? 'bg-slate-500/20 text-slate-400' :
                           'bg-white/10 text-white/50'
                         }`}>
                           {request.status}
@@ -234,14 +235,14 @@ export default function AdminLeaveRequestsClient({ profile }: AdminLeaveRequests
                               <button
                                 onClick={() => handleApprove(request.id)}
                                 disabled={processing === request.id}
-                                className="px-2 md:px-3 py-1 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 rounded text-xs md:text-sm disabled:opacity-50 transition-colors"
+                                className="px-2 md:px-3 py-1 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded text-xs md:text-sm disabled:opacity-50 transition-colors"
                               >
                                 {processing === request.id ? 'Processing...' : 'Approve'}
                               </button>
                               <button
                                 onClick={() => handleReject(request.id)}
                                 disabled={processing === request.id}
-                                className="px-2 md:px-3 py-1 bg-black/40 hover:bg-black/50 text-white rounded text-xs md:text-sm disabled:opacity-50 transition-colors"
+                                className="px-2 md:px-3 py-1 bg-slate-500/20 hover:bg-slate-500/30 text-slate-400 rounded text-xs md:text-sm disabled:opacity-50 transition-colors"
                               >
                                 {processing === request.id ? 'Processing...' : 'Reject'}
                               </button>

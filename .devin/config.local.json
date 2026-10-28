@@ -29,7 +29,8 @@
       "Exec(SUPERADMIN_PASSCODE=924040 npm run)",
       "Exec(source)",
       "Exec(ls)",
-      "Exec(npm list)"
+      "Exec(npm list)",
+      "Exec(gh pr)"
     ]
   }
 }
