@@ -28,7 +28,8 @@
       "Exec(git restore)",
       "Exec(SUPERADMIN_PASSCODE=924040 npm run)",
       "Exec(source)",
-      "Exec(ls)"
+      "Exec(ls)",
+      "Exec(npm list)"
     ]
   }
 }
