@@ -48,7 +48,8 @@ export default function AdminResetRequestsClient({ profile }: AdminResetRequests
       const response = await fetch('/api/admin/reset-requests');
       if (!response.ok) throw new Error('Failed to fetch reset requests');
       const data = await response.json();
-      setRequests(data);
+      // API returns { requests, pagination }, extract the requests array
+      setRequests(data.requests || []);
     } catch (err) {
       console.error(err);
     } finally {

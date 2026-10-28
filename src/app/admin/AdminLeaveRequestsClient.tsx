@@ -52,7 +52,8 @@ export default function AdminLeaveRequestsClient({ profile }: AdminLeaveRequests
       }
       if (!response.ok) throw new Error('Failed to fetch leave requests');
       const data = await response.json();
-      setRequests(data);
+      // API returns { requests }, extract the requests array
+      setRequests(data.requests || []);
     } catch (err) {
       setError('Failed to load leave requests');
       console.error(err);

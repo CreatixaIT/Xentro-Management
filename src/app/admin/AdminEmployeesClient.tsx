@@ -48,9 +48,11 @@ export default function AdminEmployeesClient({ profile }: AdminEmployeesClientPr
       const response = await fetch(`/api/admin/employees?status=${statusFilter}`);
       if (!response.ok) throw new Error('Failed to fetch employees');
       const data = await response.json();
-      setEmployees(data);
+      // API returns { employees, pagination }, extract the employees array
+      setEmployees(data.employees || []);
     } catch (err) {
       console.error(err);
+      setEmployees([]);
     } finally {
       setLoading(false);
     }
