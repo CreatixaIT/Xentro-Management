@@ -147,8 +147,9 @@ export default function AdminResetRequestsClient({ profile }: AdminResetRequests
       <div className="space-y-4 md:space-y-6">
         <h1 className="text-xl md:text-2xl font-bold text-white">Password Reset Requests</h1>
 
-        <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl overflow-hidden">
-          <div className="overflow-x-auto">
+        <div className="relative bg-white/5 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+          <div className="relative overflow-x-auto">
             <table className="w-full min-w-[600px]">
               <thead className="bg-white/5">
                 <tr>
@@ -212,8 +213,10 @@ export default function AdminResetRequestsClient({ profile }: AdminResetRequests
       {/* Reset Password Modal */}
       {showResetModal && selectedRequest && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-6 max-w-md w-full">
-            <h2 className="text-xl font-bold mb-4 text-white">Reset Password</h2>
+          <div className="relative bg-white/5 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl p-6 max-w-md w-full">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+            <div className="relative">
+              <h2 className="text-xl font-bold mb-4 text-white">Reset Password</h2>
             
             <div className="mb-4 p-4 bg-white/5 rounded-xl border border-white/10">
               <p className="text-sm text-white/70">
@@ -254,7 +257,7 @@ export default function AdminResetRequestsClient({ profile }: AdminResetRequests
                   type={showPassword ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-4 py-2 rounded-xl bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                  className="w-full px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500 backdrop-blur-xl"
                   placeholder="Confirm new password"
                 />
               </div>
@@ -282,11 +285,12 @@ export default function AdminResetRequestsClient({ profile }: AdminResetRequests
                 <button
                   onClick={handleResetPassword}
                   disabled={isResetting || !newPassword || !confirmPassword}
-                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white disabled:from-white/10 disabled:to-white/10 disabled:cursor-not-allowed transition-all"
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-red-500 to-yellow-500 hover:from-red-600 hover:to-yellow-600 text-white disabled:from-white/10 disabled:to-white/10 disabled:cursor-not-allowed transition-all"
                 >
                   {isResetting ? 'Resetting...' : 'Reset Password'}
                 </button>
               </div>
+            </div>
             </div>
           </div>
         </div>

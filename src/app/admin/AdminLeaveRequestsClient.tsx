@@ -148,8 +148,9 @@ export default function AdminLeaveRequestsClient({ profile }: AdminLeaveRequests
         )}
 
         {/* Filter */}
-        <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-3 md:p-4">
-          <div className="flex gap-2">
+        <div className="relative bg-white/5 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl p-3 md:p-4 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+          <div className="relative flex gap-2">
             {(['pending', 'processed'] as const).map((f) => (
               <button
                 key={f}
@@ -167,8 +168,10 @@ export default function AdminLeaveRequestsClient({ profile }: AdminLeaveRequests
         </div>
 
         {/* Requests Table */}
-        <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl overflow-hidden">
-          {requests.length === 0 ? (
+        <div className="relative bg-white/5 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+          <div className="relative">
+            {requests.length === 0 ? (
             <div className="text-center py-8 md:py-12">
               <span className="text-3xl md:text-4xl">📅</span>
               <p className="text-white/50 mt-3 md:mt-4 text-xs md:text-sm">No leave requests found</p>
@@ -261,6 +264,7 @@ export default function AdminLeaveRequestsClient({ profile }: AdminLeaveRequests
               </table>
             </div>
           )}
+          </div>
         </div>
       </div>
     </AdminLayout>

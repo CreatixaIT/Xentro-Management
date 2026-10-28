@@ -135,35 +135,38 @@ export default function AdminDashboardClient({ profile }: AdminDashboardClientPr
         {/* Employee Status Chart */}
         <div className="relative group">
           <div className="absolute inset-0 bg-gradient-to-r from-red-400 to-yellow-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition-opacity duration-300" />
-          <div className="relative bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-4 md:p-6 hover:shadow-3xl transition-shadow duration-300">
-            <h3 className="text-base md:text-lg font-semibold text-white mb-3 md:mb-4">Employee Status Distribution</h3>
-            <div className="h-48 md:h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={employeeStatusData}
-                    cx="50%"
-                    cy="50%"
-                    label={(entry: any) => `${entry.name}: ${entry.percent ? (entry.percent * 100).toFixed(0) : 0}%`}
-                    labelLine={false}
-                    outerRadius={60}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {employeeStatusData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'rgba(0, 0, 0, 0.9)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '8px',
-                      color: 'white',
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+          <div className="relative bg-white/5 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl p-4 md:p-6 hover:shadow-3xl transition-shadow duration-300 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+            <div className="relative">
+              <h3 className="text-base md:text-lg font-semibold text-white mb-3 md:mb-4">Employee Status Distribution</h3>
+              <div className="h-48 md:h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={employeeStatusData}
+                      cx="50%"
+                      cy="50%"
+                      label={(entry: any) => `${entry.name}: ${entry.percent ? (entry.percent * 100).toFixed(0) : 0}%`}
+                      labelLine={false}
+                      outerRadius={60}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {employeeStatusData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '8px',
+                        color: 'white',
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
         </div>
@@ -171,31 +174,34 @@ export default function AdminDashboardClient({ profile }: AdminDashboardClientPr
         {/* Registration Trend Chart */}
         <div className="relative group">
           <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-yellow-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition-opacity duration-300" />
-          <div className="relative bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-4 md:p-6 hover:shadow-3xl transition-shadow duration-300">
-            <h3 className="text-base md:text-lg font-semibold text-white mb-3 md:mb-4">Registration Trend (Last 30 Days)</h3>
-            <div className="h-48 md:h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={registrationData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
-                  <XAxis dataKey="date" stroke="rgba(255, 255, 255, 0.7)" tick={{ fontSize: 10 }} />
-                  <YAxis stroke="rgba(255, 255, 255, 0.7)" tick={{ fontSize: 10 }} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'rgba(0, 0, 0, 0.9)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '8px',
-                      color: 'white',
-                    }}
-                  />
-                  <Bar dataKey="count" fill="url(#barGradient)" radius={[4, 4, 0, 0]} />
-                  <defs>
-                    <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#EF4444" stopOpacity={1} />
-                      <stop offset="100%" stopColor="#7C2D12" stopOpacity={0.6} />
-                    </linearGradient>
-                  </defs>
-                </BarChart>
-              </ResponsiveContainer>
+          <div className="relative bg-white/5 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl p-4 md:p-6 hover:shadow-3xl transition-shadow duration-300 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+            <div className="relative">
+              <h3 className="text-base md:text-lg font-semibold text-white mb-3 md:mb-4">Registration Trend (Last 30 Days)</h3>
+              <div className="h-48 md:h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={registrationData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
+                    <XAxis dataKey="date" stroke="rgba(255, 255, 255, 0.7)" tick={{ fontSize: 10 }} />
+                    <YAxis stroke="rgba(255, 255, 255, 0.7)" tick={{ fontSize: 10 }} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '8px',
+                        color: 'white',
+                      }}
+                    />
+                    <Bar dataKey="count" fill="url(#barGradient)" radius={[4, 4, 0, 0]} />
+                    <defs>
+                      <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#EF4444" stopOpacity={1} />
+                        <stop offset="100%" stopColor="#7C2D12" stopOpacity={0.6} />
+                      </linearGradient>
+                    </defs>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
         </div>
@@ -232,23 +238,26 @@ export default function AdminDashboardClient({ profile }: AdminDashboardClientPr
       {/* Recent Registrations - Enhanced Glassmorphism */}
       <div className="relative group">
         <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-yellow-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition-opacity duration-300" />
-        <div className="relative bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-4 md:p-6 hover:shadow-3xl transition-shadow duration-300">
-          <h3 className="text-base md:text-lg font-semibold text-white mb-3 md:mb-4">Recent Registrations (Last 30 Days)</h3>
-          {stats?.registrationsByDate && Object.keys(stats.registrationsByDate).length > 0 ? (
-            <div className="space-y-2">
-              {Object.entries(stats.registrationsByDate)
-                .sort((a, b) => b[0].localeCompare(a[0]))
-                .slice(0, 10)
-                .map(([date, count]) => (
-                  <div key={date} className="flex justify-between items-center text-xs md:text-sm p-2 md:p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors border border-white/10">
-                    <span className="text-white/70">{new Date(date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
-                    <span className="font-semibold text-yellow-400">{count} new registrations</span>
-                  </div>
-                ))}
-            </div>
-          ) : (
-            <p className="text-white/50 text-xs md:text-sm">No recent registrations</p>
-          )}
+        <div className="relative bg-white/5 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl p-4 md:p-6 hover:shadow-3xl transition-shadow duration-300 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+          <div className="relative">
+            <h3 className="text-base md:text-lg font-semibold text-white mb-3 md:mb-4">Recent Registrations (Last 30 Days)</h3>
+            {stats?.registrationsByDate && Object.keys(stats.registrationsByDate).length > 0 ? (
+              <div className="space-y-2">
+                {Object.entries(stats.registrationsByDate)
+                  .sort((a, b) => b[0].localeCompare(a[0]))
+                  .slice(0, 10)
+                  .map(([date, count]) => (
+                    <div key={date} className="flex justify-between items-center text-xs md:text-sm p-2 md:p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors border border-white/10">
+                      <span className="text-white/70">{new Date(date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                      <span className="font-semibold text-yellow-400">{count} new registrations</span>
+                    </div>
+                  ))}
+              </div>
+            ) : (
+              <p className="text-white/50 text-xs md:text-sm">No recent registrations</p>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -276,8 +285,9 @@ function StatCard({
       className="block relative group"
     >
       <div className={`absolute inset-0 bg-gradient-to-r ${borderColor} rounded-2xl blur opacity-20 group-hover:opacity-40 transition-opacity duration-300`} />
-      <div className={`relative bg-gradient-to-br ${color} backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-4 md:p-6 hover:scale-105 hover:shadow-3xl transition-all duration-300 group`}>
-        <div className="flex items-start justify-between">
+      <div className={`relative bg-gradient-to-br ${color} backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl p-4 md:p-6 hover:scale-105 hover:shadow-3xl transition-all duration-300 group overflow-hidden`}>
+        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+        <div className="relative flex items-start justify-between">
           <div>
             <p className="text-xs md:text-sm font-medium text-white/70 mb-1 md:mb-2">{title}</p>
             <p className="text-2xl md:text-3xl font-bold text-white transition-colors">{value}</p>
@@ -296,8 +306,9 @@ function ActionCard({ title, description, icon, color, borderColor, href }: { ti
       className="block relative group"
     >
       <div className={`absolute inset-0 bg-gradient-to-r ${borderColor} rounded-2xl blur opacity-20 group-hover:opacity-40 transition-opacity duration-300`} />
-      <div className={`relative bg-gradient-to-br ${color} backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-4 md:p-6 hover:scale-105 hover:shadow-3xl transition-all duration-300 group`}>
-        <div className="flex items-start gap-3 md:gap-4">
+      <div className={`relative bg-gradient-to-br ${color} backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl p-4 md:p-6 hover:scale-105 hover:shadow-3xl transition-all duration-300 group overflow-hidden`}>
+        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+        <div className="relative flex items-start gap-3 md:gap-4">
           <span className="text-3xl md:text-4xl group-hover:scale-110 transition-transform">{icon}</span>
           <div>
             <h3 className="text-base md:text-lg font-semibold text-white mb-1 md:mb-2 transition-colors">{title}</h3>

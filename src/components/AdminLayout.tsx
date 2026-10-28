@@ -72,11 +72,11 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-red-900/30 to-black relative overflow-hidden">
-      {/* Background glow effects */}
-      <div className="fixed top-0 left-0 w-96 h-96 bg-red-500/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
-      <div className="fixed bottom-0 right-0 w-96 h-96 bg-yellow-500/20 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
-      <div className="fixed top-1/2 left-1/2 w-96 h-96 bg-red-600/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+    <div className="min-h-screen bg-black relative overflow-hidden">
+      {/* Subtle background glow effects */}
+      <div className="fixed top-0 left-0 w-96 h-96 bg-red-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+      <div className="fixed bottom-0 right-0 w-96 h-96 bg-yellow-500/10 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
+      <div className="fixed top-1/2 left-1/2 w-96 h-96 bg-red-600/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
 
       {/* Mobile menu overlay */}
       {mobileMenuOpen && (
@@ -94,7 +94,7 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
           ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         `}
       >
-        <div className="relative h-full bg-white/10 backdrop-blur-xl rounded-2xl md:rounded-none border border-white/20 shadow-2xl flex flex-col overflow-hidden">
+        <div className="relative h-full bg-white/5 backdrop-blur-2xl rounded-2xl md:rounded-none border border-white/10 shadow-2xl flex flex-col overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-red-500/5 to-yellow-500/5 pointer-events-none" />
           {/* Logo */}
           <div className="p-4 md:p-6 border-b border-white/10">
@@ -182,7 +182,7 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
         <header className="sticky top-0 z-30 px-3 md:px-4 lg:px-8 py-3 md:py-4">
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 to-yellow-500/10 rounded-2xl blur-xl" />
-            <div className="relative bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl px-4 md:px-6 py-3 md:py-4">
+            <div className="relative bg-white/5 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl px-4 md:px-6 py-3 md:py-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 md:gap-4">
                   {/* Mobile menu button */}

@@ -147,8 +147,9 @@ export default function AdminEmployeesClient({ profile }: AdminEmployeesClientPr
           </select>
         </div>
 
-        <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl overflow-hidden">
-          <div className="overflow-x-auto">
+        <div className="relative bg-white/5 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+          <div className="relative overflow-x-auto">
             <table className="w-full min-w-[600px]">
               <thead className="bg-white/5">
                 <tr>
@@ -228,7 +229,7 @@ export default function AdminEmployeesClient({ profile }: AdminEmployeesClientPr
       {/* Employee Details Modal */}
       {showDetailsModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white/5 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-start mb-6">
               <h2 className="text-2xl font-bold text-white">Employee Details</h2>
               <button
