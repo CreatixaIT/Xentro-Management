@@ -73,11 +73,11 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden" style={{ backgroundColor: '#080B14' }}>
       {/* Sophisticated background glow effects */}
-      <div className="fixed top-0 left-0 w-[500px] h-[500px] bg-purple-500/8 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/2" />
-      <div className="fixed bottom-0 right-0 w-[500px] h-[500px] bg-blue-500/8 rounded-full blur-[120px] translate-x-1/2 translate-y-1/2" />
-      <div className="fixed top-1/2 left-1/2 w-[400px] h-[400px] bg-teal-500/5 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2" />
+      <div className="fixed top-0 left-0 w-[500px] h-[500px] rounded-full blur-[120px] opacity-30" style={{ backgroundColor: '#8B5CF6', transform: 'translate(-50%, -50%)' }} />
+      <div className="fixed bottom-0 right-0 w-[500px] h-[500px] rounded-full blur-[120px] opacity-20" style={{ backgroundColor: '#60A5FA', transform: 'translate(50%, 50%)' }} />
+      <div className="fixed top-1/2 left-1/2 w-[400px] h-[400px] rounded-full blur-[100px] opacity-15" style={{ backgroundColor: '#22D3EE', transform: 'translate(-50%, -50%)' }} />
 
       {/* Mobile menu overlay */}
       {mobileMenuOpen && (
@@ -95,17 +95,17 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
           ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         `}
       >
-        <div className="relative h-full bg-white/[0.03] backdrop-blur-xl rounded-2xl md:rounded-none border border-white/[0.08] shadow-2xl flex flex-col overflow-hidden">
+        <div className="relative h-full backdrop-blur-xl rounded-2xl md:rounded-none shadow-2xl flex flex-col overflow-hidden" style={{ backgroundColor: 'rgba(20, 27, 45, 0.72)', border: '1px solid rgba(255, 255, 255, 0.10)' }}>
           {/* Logo */}
-          <div className="p-5 md:p-6 border-b border-white/[0.08]">
+          <div className="p-5 md:p-6 border-b" style={{ borderColor: 'rgba(255, 255, 255, 0.10)' }}>
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
+              <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(to bottom right, #8B5CF6, #60A5FA)' }}>
                 <span className="text-lg md:text-xl font-bold text-white">X</span>
               </div>
               {!sidebarCollapsed && (
                 <div>
-                  <h1 className="text-base md:text-lg font-bold text-white tracking-tight">Xentro</h1>
-                  <p className="text-xs text-white/50 font-medium">Super Admin</p>
+                  <h1 className="text-base md:text-lg font-bold" style={{ color: '#F4F7FF', letterSpacing: '-0.01em' }}>Xentro</h1>
+                  <p className="text-xs font-medium" style={{ color: '#8995AD' }}>Super Admin</p>
                 </div>
               )}
             </div>
@@ -120,35 +120,40 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
                 onClick={() => setMobileMenuOpen(false)}
                 className={`flex items-center px-3 md:px-4 py-2.5 md:py-3 rounded-xl transition-all duration-200 group relative
                   ${isActive(item.href)
-                    ? 'bg-white/[0.08] text-white shadow-lg border border-white/[0.12]'
-                    : 'text-white/60 hover:bg-white/[0.05] hover:text-white border border-transparent'
+                    ? 'shadow-lg'
+                    : 'hover:shadow-lg'
                   }
                   ${sidebarCollapsed ? 'justify-center' : ''}
                 `}
+                style={{
+                  backgroundColor: isActive(item.href) ? 'rgba(29, 38, 60, 0.78)' : 'transparent',
+                  color: isActive(item.href) ? '#F4F7FF' : '#B4BED1',
+                  border: isActive(item.href) ? '1px solid rgba(255, 255, 255, 0.10)' : '1px solid transparent'
+                }}
                 title={sidebarCollapsed ? item.name : ''}
               >
-                <span className="group-hover:scale-105 transition-transform duration-200">{item.icon}</span>
+                <span className="group-hover:scale-105 transition-transform duration-200" style={{ color: isActive(item.href) ? '#8B5CF6' : '#B4BED1' }}>{item.icon}</span>
                 {!sidebarCollapsed && (
-                  <span className="ml-3 font-medium text-sm tracking-wide">{item.name}</span>
+                  <span className="ml-3 font-medium text-sm tracking-wide" style={{ color: isActive(item.href) ? '#F4F7FF' : '#B4BED1' }}>{item.name}</span>
                 )}
                 {isActive(item.href) && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-gradient-to-b from-purple-500 to-blue-500 rounded-full" />
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-full" style={{ background: 'linear-gradient(to bottom, #8B5CF6, #60A5FA)' }} />
                 )}
               </Link>
             ))}
           </nav>
 
           {/* Profile Section */}
-          <div className="p-3 md:p-4 border-t border-white/[0.08]">
+          <div className="p-3 md:p-4 border-t" style={{ borderColor: 'rgba(255, 255, 255, 0.10)' }}>
             {profile && (
-              <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] transition-colors border border-white/[0.06]">
-                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
+              <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-xl transition-colors" style={{ backgroundColor: 'rgba(20, 27, 45, 0.5)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(to bottom right, #8B5CF6, #60A5FA)' }}>
                   <span className="text-sm md:text-lg">👤</span>
                 </div>
                 {!sidebarCollapsed && (
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs md:text-sm font-medium text-white truncate">{profile.full_name}</p>
-                    <p className="text-xs text-white/50 truncate">@{profile.username}</p>
+                    <p className="text-xs md:text-sm font-medium truncate" style={{ color: '#F4F7FF' }}>{profile.full_name}</p>
+                    <p className="text-xs truncate" style={{ color: '#8995AD' }}>@{profile.username}</p>
                   </div>
                 )}
               </div>
@@ -156,7 +161,10 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
             <form action="/auth/sign-out" method="post" className="mt-2 md:mt-3">
               <button
                 type="submit"
-                className="w-full text-left px-3 md:px-4 py-2 text-sm text-white/50 hover:bg-white/[0.06] hover:text-white rounded-xl transition-colors flex items-center gap-2 border border-transparent hover:border-white/[0.06]"
+                className="w-full text-left px-3 md:px-4 py-2 text-sm rounded-xl transition-colors flex items-center gap-2 border border-transparent"
+                style={{ color: '#B4BED1', backgroundColor: 'transparent' }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}
               >
                 <LogOut className="w-4 h-4" />
                 {!sidebarCollapsed && <span className="text-sm">Sign Out</span>}
@@ -167,7 +175,8 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
           {/* Collapse Toggle */}
           <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 md:w-7 md:h-7 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg shadow-purple-500/20 hover:scale-110 transition-transform hidden md:flex border border-white/[0.1]"
+            className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 md:w-7 md:h-7 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform hidden md:flex border"
+            style={{ background: 'linear-gradient(to bottom right, #8B5CF6, #60A5FA)', borderColor: 'rgba(255, 255, 255, 0.10)' }}
           >
             {sidebarCollapsed ? <ChevronRight className="w-3 h-3 text-white" /> : <ChevronLeft className="w-3 h-3 text-white" />}
           </button>
@@ -179,32 +188,33 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
         {/* Header */}
         <header className="sticky top-0 z-30 px-3 md:px-4 lg:px-8 py-3 md:py-4">
           <div className="relative">
-            <div className="relative bg-white/[0.03] backdrop-blur-xl rounded-2xl border border-white/[0.08] shadow-2xl px-4 md:px-6 py-3 md:py-4">
+            <div className="relative backdrop-blur-xl rounded-2xl shadow-2xl px-4 md:px-6 py-3 md:py-4" style={{ backgroundColor: 'rgba(20, 27, 45, 0.72)', border: '1px solid rgba(255, 255, 255, 0.10)' }}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 md:gap-4">
                   {/* Mobile menu button */}
                   <button
                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                    className="md:hidden p-2 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] transition-colors border border-white/[0.08]"
+                    className="md:hidden p-2 rounded-lg transition-colors border"
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', borderColor: 'rgba(255, 255, 255, 0.08)' }}
                   >
-                    <Menu className="w-5 h-5 text-white" />
+                    <Menu className="w-5 h-5" style={{ color: '#F4F7FF' }} />
                   </button>
 
                   <div>
-                    <h1 className="text-lg md:text-xl lg:text-2xl font-bold text-white tracking-tight">
+                    <h1 className="text-lg md:text-xl lg:text-2xl font-bold" style={{ color: '#F4F7FF', letterSpacing: '-0.01em' }}>
                       Welcome back, {profile?.full_name || 'Admin'}
                     </h1>
-                    <p className="text-xs md:text-sm text-white/50 hidden sm:block">{currentDate}</p>
+                    <p className="text-xs md:text-sm hidden sm:block" style={{ color: '#8995AD' }}>{currentDate}</p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3 md:gap-4">
                   <div className="hidden md:block text-right">
-                    <p className="text-xl md:text-2xl font-bold text-purple-400">{currentTime}</p>
-                    <p className="text-xs text-white/50">Dhaka Time</p>
+                    <p className="text-xl md:text-2xl font-bold" style={{ color: '#8B5CF6' }}>{currentTime}</p>
+                    <p className="text-xs" style={{ color: '#8995AD' }}>Dhaka Time</p>
                   </div>
                   {profile?.avatar_path && (
-                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(to bottom right, #8B5CF6, #60A5FA)' }}>
                       <span className="text-lg md:text-xl">👤</span>
                     </div>
                   )}
@@ -215,7 +225,7 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
         </header>
 
         {/* Page Content */}
-        <main className="p-3 md:p-4 lg:p-8">
+        <main className="p-4 md:p-6 lg:p-8">
           {children}
         </main>
       </div>
