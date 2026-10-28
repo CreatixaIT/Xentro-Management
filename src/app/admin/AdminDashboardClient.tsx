@@ -14,7 +14,7 @@ interface Stats {
   registrationsByDate: Record<string, number>;
 }
 
-const COLORS = ['#10B981', '#FBBF24', '#EF4444', '#8B5CF6', '#3B82F6'];
+const COLORS = ['#EF4444', '#FBBF24', '#000000', '#7C2D12', '#991B1B'];
 
 interface AdminDashboardClientProps {
   profile: {
@@ -92,40 +92,40 @@ export default function AdminDashboardClient({ profile }: AdminDashboardClientPr
           title="Total Employees"
           value={stats?.totalEmployees || 0}
           icon="👥"
-          color="from-blue-500/20 to-blue-600/20"
-          borderColor="from-blue-400 to-blue-600"
+          color="from-red-500/20 to-red-600/20"
+          borderColor="from-red-400 to-red-600"
           href="/admin/employees"
         />
         <StatCard
           title="Active Employees"
           value={stats?.activeEmployees || 0}
           icon="✅"
-          color="from-green-500/20 to-green-600/20"
-          borderColor="from-green-400 to-green-600"
+          color="from-yellow-500/20 to-yellow-600/20"
+          borderColor="from-yellow-400 to-yellow-600"
           href="/admin/employees"
         />
         <StatCard
           title="Pending Approvals"
           value={stats?.pendingEmployees || 0}
           icon="⏳"
-          color="from-yellow-500/20 to-yellow-600/20"
-          borderColor="from-yellow-400 to-yellow-600"
+          color="from-red-600/20 to-red-700/20"
+          borderColor="from-red-500 to-red-700"
           href="/admin/employees"
         />
         <StatCard
           title="Reset Requests"
           value={stats?.pendingResetRequests || 0}
           icon="🔑"
-          color="from-orange-500/20 to-orange-600/20"
-          borderColor="from-orange-400 to-orange-600"
+          color="from-yellow-600/20 to-yellow-700/20"
+          borderColor="from-yellow-500 to-yellow-700"
           href="/admin/reset-requests"
         />
         <StatCard
           title="Leave Requests"
           value={stats?.pendingLeaveRequests || 0}
           icon="📅"
-          color="from-purple-500/20 to-purple-600/20"
-          borderColor="from-purple-400 to-purple-600"
+          color="from-red-700/20 to-black/20"
+          borderColor="from-red-600 to-black"
           href="/admin/leave-requests"
         />
       </div>
@@ -134,7 +134,7 @@ export default function AdminDashboardClient({ profile }: AdminDashboardClientPr
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         {/* Employee Status Chart */}
         <div className="relative group">
-          <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-blue-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition-opacity duration-300" />
+          <div className="absolute inset-0 bg-gradient-to-r from-red-400 to-yellow-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition-opacity duration-300" />
           <div className="relative bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-4 md:p-6 hover:shadow-3xl transition-shadow duration-300">
             <h3 className="text-base md:text-lg font-semibold text-white mb-3 md:mb-4">Employee Status Distribution</h3>
             <div className="h-48 md:h-64">
@@ -156,7 +156,7 @@ export default function AdminDashboardClient({ profile }: AdminDashboardClientPr
                   </Pie>
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                      backgroundColor: 'rgba(0, 0, 0, 0.9)',
                       border: '1px solid rgba(255, 255, 255, 0.1)',
                       borderRadius: '8px',
                       color: 'white',
@@ -170,7 +170,7 @@ export default function AdminDashboardClient({ profile }: AdminDashboardClientPr
 
         {/* Registration Trend Chart */}
         <div className="relative group">
-          <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition-opacity duration-300" />
+          <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-yellow-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition-opacity duration-300" />
           <div className="relative bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-4 md:p-6 hover:shadow-3xl transition-shadow duration-300">
             <h3 className="text-base md:text-lg font-semibold text-white mb-3 md:mb-4">Registration Trend (Last 30 Days)</h3>
             <div className="h-48 md:h-64">
@@ -181,7 +181,7 @@ export default function AdminDashboardClient({ profile }: AdminDashboardClientPr
                   <YAxis stroke="rgba(255, 255, 255, 0.7)" tick={{ fontSize: 10 }} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                      backgroundColor: 'rgba(0, 0, 0, 0.9)',
                       border: '1px solid rgba(255, 255, 255, 0.1)',
                       borderRadius: '8px',
                       color: 'white',
@@ -190,8 +190,8 @@ export default function AdminDashboardClient({ profile }: AdminDashboardClientPr
                   <Bar dataKey="count" fill="url(#barGradient)" radius={[4, 4, 0, 0]} />
                   <defs>
                     <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#FBBF24" stopOpacity={1} />
-                      <stop offset="100%" stopColor="#F59E0B" stopOpacity={0.6} />
+                      <stop offset="0%" stopColor="#EF4444" stopOpacity={1} />
+                      <stop offset="100%" stopColor="#7C2D12" stopOpacity={0.6} />
                     </linearGradient>
                   </defs>
                 </BarChart>
@@ -207,31 +207,31 @@ export default function AdminDashboardClient({ profile }: AdminDashboardClientPr
           title="User Management"
           description="View and manage employee accounts"
           icon="👥"
-          color="from-blue-500/20 to-blue-600/20"
-          borderColor="from-blue-400 to-blue-600"
+          color="from-red-500/20 to-red-600/20"
+          borderColor="from-red-400 to-red-600"
           href="/admin/employees"
         />
         <ActionCard
           title="Password Reset Requests"
           description="Review and process password reset requests"
           icon="🔑"
-          color="from-orange-500/20 to-orange-600/20"
-          borderColor="from-orange-400 to-orange-600"
+          color="from-yellow-500/20 to-yellow-600/20"
+          borderColor="from-yellow-400 to-yellow-600"
           href="/admin/reset-requests"
         />
         <ActionCard
           title="Leave Requests"
           description="Review and approve/reject leave requests"
           icon="📅"
-          color="from-purple-500/20 to-purple-600/20"
-          borderColor="from-purple-400 to-purple-600"
+          color="from-red-700/20 to-black/20"
+          borderColor="from-red-600 to-black"
           href="/admin/leave-requests"
         />
       </div>
 
       {/* Recent Registrations - Enhanced Glassmorphism */}
       <div className="relative group">
-        <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition-opacity duration-300" />
+        <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-yellow-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition-opacity duration-300" />
         <div className="relative bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-4 md:p-6 hover:shadow-3xl transition-shadow duration-300">
           <h3 className="text-base md:text-lg font-semibold text-white mb-3 md:mb-4">Recent Registrations (Last 30 Days)</h3>
           {stats?.registrationsByDate && Object.keys(stats.registrationsByDate).length > 0 ? (
@@ -280,7 +280,7 @@ function StatCard({
         <div className="flex items-start justify-between">
           <div>
             <p className="text-xs md:text-sm font-medium text-white/70 mb-1 md:mb-2">{title}</p>
-            <p className="text-2xl md:text-3xl font-bold text-white group-hover:text-yellow-400 transition-colors">{value}</p>
+            <p className="text-2xl md:text-3xl font-bold text-white transition-colors">{value}</p>
           </div>
           <span className="text-3xl md:text-4xl group-hover:scale-110 transition-transform">{icon}</span>
         </div>
@@ -300,7 +300,7 @@ function ActionCard({ title, description, icon, color, borderColor, href }: { ti
         <div className="flex items-start gap-3 md:gap-4">
           <span className="text-3xl md:text-4xl group-hover:scale-110 transition-transform">{icon}</span>
           <div>
-            <h3 className="text-base md:text-lg font-semibold text-white mb-1 md:mb-2 group-hover:text-yellow-400 transition-colors">{title}</h3>
+            <h3 className="text-base md:text-lg font-semibold text-white mb-1 md:mb-2 transition-colors">{title}</h3>
             <p className="text-white/60 text-xs md:text-sm">{description}</p>
           </div>
         </div>

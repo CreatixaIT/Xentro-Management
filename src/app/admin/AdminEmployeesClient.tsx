@@ -175,8 +175,8 @@ export default function AdminEmployeesClient({ profile }: AdminEmployeesClientPr
                     <td className="px-3 md:px-4 py-2 md:py-3 text-white/70 text-xs md:text-sm">{emp.designation}</td>
                     <td className="px-3 md:px-4 py-2 md:py-3">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        emp.status === 'ACTIVE' ? 'bg-green-500/20 text-green-400' :
-                        emp.status === 'PENDING' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'
+                        emp.status === 'ACTIVE' ? 'bg-yellow-500/20 text-yellow-400' :
+                        emp.status === 'PENDING' ? 'bg-red-500/20 text-red-400' : 'bg-black/40 text-white'
                       }`}>
                         {emp.status}
                       </span>
@@ -192,7 +192,7 @@ export default function AdminEmployeesClient({ profile }: AdminEmployeesClientPr
                       {emp.status === 'PENDING' && (
                         <button
                           onClick={() => updateStatus(emp.id, 'ACTIVE')}
-                          className="bg-green-500/20 hover:bg-green-500/30 text-green-400 px-2 md:px-3 py-1 rounded text-xs md:text-sm mr-1 md:mr-2 transition-colors"
+                          className="bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 px-2 md:px-3 py-1 rounded text-xs md:text-sm mr-1 md:mr-2 transition-colors"
                         >
                           Approve
                         </button>
@@ -208,7 +208,7 @@ export default function AdminEmployeesClient({ profile }: AdminEmployeesClientPr
                       {emp.status === 'SUSPENDED' && (
                         <button
                           onClick={() => updateStatus(emp.id, 'ACTIVE')}
-                          className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 px-2 md:px-3 py-1 rounded text-xs md:text-sm transition-colors"
+                          className="bg-yellow-600/20 hover:bg-yellow-600/30 text-yellow-400 px-2 md:px-3 py-1 rounded text-xs md:text-sm transition-colors"
                         >
                           Reactivate
                         </button>

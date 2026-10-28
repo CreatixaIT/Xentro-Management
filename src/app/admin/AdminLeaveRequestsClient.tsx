@@ -206,9 +206,9 @@ export default function AdminLeaveRequestsClient({ profile }: AdminLeaveRequests
                       </td>
                       <td className="px-3 md:px-4 py-2 md:py-3">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          request.status === 'PENDING' ? 'bg-yellow-500/20 text-yellow-400' :
-                          request.status === 'APPROVED' ? 'bg-green-500/20 text-green-400' :
-                          request.status === 'REJECTED' ? 'bg-red-500/20 text-red-400' :
+                          request.status === 'PENDING' ? 'bg-red-500/20 text-red-400' :
+                          request.status === 'APPROVED' ? 'bg-yellow-500/20 text-yellow-400' :
+                          request.status === 'REJECTED' ? 'bg-black/40 text-white' :
                           'bg-white/10 text-white/50'
                         }`}>
                           {request.status}
@@ -231,14 +231,14 @@ export default function AdminLeaveRequestsClient({ profile }: AdminLeaveRequests
                               <button
                                 onClick={() => handleApprove(request.id)}
                                 disabled={processing === request.id}
-                                className="px-2 md:px-3 py-1 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded text-xs md:text-sm disabled:opacity-50 transition-colors"
+                                className="px-2 md:px-3 py-1 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 rounded text-xs md:text-sm disabled:opacity-50 transition-colors"
                               >
                                 {processing === request.id ? 'Processing...' : 'Approve'}
                               </button>
                               <button
                                 onClick={() => handleReject(request.id)}
                                 disabled={processing === request.id}
-                                className="px-2 md:px-3 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded text-xs md:text-sm disabled:opacity-50 transition-colors"
+                                className="px-2 md:px-3 py-1 bg-black/40 hover:bg-black/50 text-white rounded text-xs md:text-sm disabled:opacity-50 transition-colors"
                               >
                                 {processing === request.id ? 'Processing...' : 'Reject'}
                               </button>

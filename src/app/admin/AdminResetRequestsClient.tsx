@@ -173,9 +173,9 @@ export default function AdminResetRequestsClient({ profile }: AdminResetRequests
                     </td>
                     <td className="px-3 md:px-4 py-2 md:py-3">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        req.status === 'PENDING' ? 'bg-yellow-500/20 text-yellow-400' :
-                        req.status === 'APPROVED' ? 'bg-blue-500/20 text-blue-400' :
-                        req.status === 'COMPLETED' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                        req.status === 'PENDING' ? 'bg-red-500/20 text-red-400' :
+                        req.status === 'APPROVED' ? 'bg-yellow-500/20 text-yellow-400' :
+                        req.status === 'COMPLETED' ? 'bg-yellow-600/20 text-yellow-400' : 'bg-black/40 text-white'
                       }`}>
                         {req.status}
                       </span>
@@ -185,13 +185,13 @@ export default function AdminResetRequestsClient({ profile }: AdminResetRequests
                         <>
                           <button
                             onClick={() => openResetModal(req)}
-                            className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 px-2 md:px-3 py-1 rounded text-xs md:text-sm mr-1 md:mr-2 transition-colors"
+                            className="bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 px-2 md:px-3 py-1 rounded text-xs md:text-sm mr-1 md:mr-2 transition-colors"
                           >
                             Reset Password
                           </button>
                           <button
                             onClick={() => handleAction(req.id, 'REJECT')}
-                            className="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-2 md:px-3 py-1 rounded text-xs md:text-sm transition-colors"
+                            className="bg-black/40 hover:bg-black/50 text-white px-2 md:px-3 py-1 rounded text-xs md:text-sm transition-colors"
                           >
                             Reject
                           </button>
