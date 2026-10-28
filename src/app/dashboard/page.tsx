@@ -13,9 +13,14 @@ export default async function DashboardPage() {
   // Get user profile
   const { data: profile } = await supabase
     .from('profiles')
-    .select('id, full_name, username, designation, status, avatar_path')
+    .select('id, full_name, username, designation, status, avatar_path, role')
     .eq('id', user.id)
     .single();
+
+  // Redirect SUPER_ADMIN to admin dashboard
+  if (profile?.role === 'SUPER_ADMIN' && profile?.status === 'ACTIVE') {
+    redirect('/admin');
+  }
 
   // Get signed URL for profile photo if available
   let avatarUrl: string | null = null;

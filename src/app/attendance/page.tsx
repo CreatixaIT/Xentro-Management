@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import AppLayout from '@/components/AppLayout';
+import SharedLayout from '@/components/SharedLayout';
 
 interface AttendanceSession {
   id: string;
@@ -490,7 +490,7 @@ export default function AttendancePage() {
   const stats = getSummaryStats();
 
   return (
-    <AppLayout>
+    <SharedLayout>
       <div className="min-h-screen space-y-6 pb-20 md:pb-0">
         {/* Header with Live Clock */}
         <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-md border border-white/30 p-6">
@@ -964,6 +964,6 @@ export default function AttendancePage() {
           </div>
         )}
       </div>
-    </AppLayout>
+    </SharedLayout>
   );
 }

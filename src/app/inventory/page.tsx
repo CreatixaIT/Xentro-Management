@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import AppLayout from '@/components/AppLayout';
+import SharedLayout from '@/components/SharedLayout';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -591,7 +591,7 @@ export default function InventoryPage() {
   };
 
   return (
-    <AppLayout profile={currentUser}>
+    <SharedLayout profile={currentUser}>
       <div className="space-y-6 pb-20 md:pb-0">
         {/* Header */}
         <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-md border border-white/30 p-6">
@@ -1189,6 +1189,6 @@ export default function InventoryPage() {
           </div>
         )}
       </div>
-    </AppLayout>
+    </SharedLayout>
   );
 }

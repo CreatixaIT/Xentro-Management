@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import AppLayout from '@/components/AppLayout';
+import SharedLayout from '@/components/SharedLayout';
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -18,7 +18,7 @@ export default async function SettingsPage() {
     .single();
 
   return (
-    <AppLayout profile={profile}>
+    <SharedLayout profile={profile}>
       <div className="space-y-6 pb-20 md:pb-0">
         <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-md border border-white/30 p-6">
           <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
@@ -112,6 +112,6 @@ export default async function SettingsPage() {
           </form>
         </div>
       </div>
-    </AppLayout>
+    </SharedLayout>
   );
 }
