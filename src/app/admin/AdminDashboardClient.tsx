@@ -122,7 +122,7 @@ export default function AdminDashboardClient({ profile }: AdminDashboardClientPr
       {/* Charts Row - Fixed Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         {/* Employee Status Chart - Fixed Overlapping Labels */}
-        <div className="relative backdrop-blur-xl rounded-2xl shadow-2xl p-4 md:p-6 overflow-hidden" style={{ backgroundColor: 'rgba(20, 27, 45, 0.85)', border: '1px solid rgba(255, 255, 255, 0.10)' }}>
+        <div className="relative backdrop-blur-xl rounded-2xl shadow-2xl p-4 md:p-6 overflow-hidden" style={{ backgroundColor: 'rgba(20, 27, 45, 0.60)', border: '1px solid rgba(255, 255, 255, 0.10)' }}>
           <h3 className="text-base md:text-lg font-semibold mb-4" style={{ color: '#F4F7FF', letterSpacing: '-0.01em' }}>Employee Status Distribution</h3>
           <div className="flex flex-col md:flex-row gap-4 md:gap-6">
             <div className="flex-1 h-48 md:h-56">
@@ -173,7 +173,7 @@ export default function AdminDashboardClient({ profile }: AdminDashboardClientPr
         </div>
 
         {/* Registration Trend Chart */}
-        <div className="relative backdrop-blur-xl rounded-2xl shadow-2xl p-4 md:p-6 overflow-hidden" style={{ backgroundColor: 'rgba(20, 27, 45, 0.85)', border: '1px solid rgba(255, 255, 255, 0.10)' }}>
+        <div className="relative backdrop-blur-xl rounded-2xl shadow-2xl p-4 md:p-6 overflow-hidden" style={{ backgroundColor: 'rgba(20, 27, 45, 0.60)', border: '1px solid rgba(255, 255, 255, 0.10)' }}>
           <h3 className="text-base md:text-lg font-semibold mb-4" style={{ color: '#F4F7FF', letterSpacing: '-0.01em' }}>Registration Trend (Last 30 Days)</h3>
           <div className="h-48 md:h-56">
             <ResponsiveContainer width="100%" height="100%">
@@ -225,7 +225,7 @@ export default function AdminDashboardClient({ profile }: AdminDashboardClientPr
       </div>
 
       {/* Recent Registrations - Unified Glass Design */}
-      <div className="relative backdrop-blur-xl rounded-2xl shadow-2xl p-4 md:p-6 overflow-hidden" style={{ backgroundColor: 'rgba(20, 27, 45, 0.85)', border: '1px solid rgba(255, 255, 255, 0.10)' }}>
+      <div className="relative backdrop-blur-xl rounded-2xl shadow-2xl p-4 md:p-6 overflow-hidden" style={{ backgroundColor: 'rgba(20, 27, 45, 0.60)', border: '1px solid rgba(255, 255, 255, 0.10)' }}>
         <h3 className="text-base md:text-lg font-semibold mb-4" style={{ color: '#F4F7FF', letterSpacing: '-0.01em' }}>Recent Registrations (Last 30 Days)</h3>
         {stats?.registrationsByDate && Object.keys(stats.registrationsByDate).length > 0 ? (
           <div className="space-y-2">
@@ -263,7 +263,7 @@ function StatCard({
       href={href}
       className="block relative group"
     >
-      <div className="relative backdrop-blur-xl rounded-2xl shadow-2xl p-4 md:p-6 hover:shadow-3xl transition-all duration-300 group overflow-hidden" style={{ backgroundColor: 'rgba(20, 27, 45, 0.85)', border: '1px solid rgba(255, 255, 255, 0.10)' }}>
+      <div className="relative backdrop-blur-xl rounded-2xl shadow-2xl p-4 md:p-6 hover:shadow-3xl transition-all duration-300 group overflow-hidden" style={{ backgroundColor: 'rgba(20, 27, 45, 0.60)', border: '1px solid rgba(255, 255, 255, 0.10)' }}>
         <div className="relative flex items-start justify-between">
           <div>
             <p className="text-xs md:text-sm font-medium mb-1 md:mb-2" style={{ color: '#B4BED1', letterSpacing: '0.02em' }}>{title}</p>
@@ -282,7 +282,7 @@ function ActionCard({ title, description, icon, href }: { title: string; descrip
       href={href}
       className="block relative group"
     >
-      <div className="relative backdrop-blur-xl rounded-2xl shadow-2xl p-4 md:p-6 hover:shadow-3xl transition-all duration-300 group overflow-hidden" style={{ backgroundColor: 'rgba(20, 27, 45, 0.85)', border: '1px solid rgba(255, 255, 255, 0.10)' }}>
+      <div className="relative backdrop-blur-xl rounded-2xl shadow-2xl p-4 md:p-6 hover:shadow-3xl transition-all duration-300 group overflow-hidden" style={{ backgroundColor: 'rgba(20, 27, 45, 0.60)', border: '1px solid rgba(255, 255, 255, 0.10)' }}>
         <div className="relative flex items-start gap-3 md:gap-4">
           <span className="text-3xl md:text-4xl group-hover:scale-110 transition-transform duration-200" style={{ color: '#8B5CF6' }}>{icon}</span>
           <div>
