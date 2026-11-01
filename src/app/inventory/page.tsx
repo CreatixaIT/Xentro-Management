@@ -88,7 +88,7 @@ export default function InventoryPage() {
   const [deleting, setDeleting] = useState(false);
   
   // Filters
-  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth());
+  const [selectedMonth, setSelectedMonth] = useState<number>(-1); // Default to All Months
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [dateBasis, setDateBasis] = useState<'purchase_date' | 'created_at'>('created_at');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');

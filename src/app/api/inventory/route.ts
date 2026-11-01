@@ -31,7 +31,7 @@ export async function GET(request: Request) {
     `);
 
   // Filter by date
-  if (month && year && month !== 'all' && year !== 'all') {
+  if (month && year && month !== '-1' && month !== 'all' && year !== 'all') {
     const startDate = `${year}-${String(parseInt(month) + 1).padStart(2, '0')}-01`;
     const endDate = new Date(parseInt(year), parseInt(month) + 1, 0).toISOString().split('T')[0];
     
