@@ -31,14 +31,14 @@ export default function SharedLayout({ children, profile }: SharedLayoutProps) {
   }, [profile]);
 
   // Super Admin routes that should always use AdminLayout
-  const adminRoutes = ['/admin', '/admin/employees', '/admin/leave-requests', '/admin/reset-requests', '/admin/inventory', '/admin/projects', '/admin/tasks', '/admin/attendance'];
+  const adminRoutes = ['/admin', '/admin/employees', '/admin/leave-requests', '/admin/reset-requests', '/admin/inventory', '/admin/projects', '/admin/tasks', '/admin/attendance', '/admin/settings'];
   const isAdminRoute = adminRoutes.some(route => pathname.startsWith(route));
 
-  // If explicitly on admin route or user is Super Admin, use AdminLayout
-  if (isAdminRoute || isAdmin) {
+  // If explicitly on admin route, use AdminLayout regardless of role
+  if (isAdminRoute) {
     return <AdminLayout profile={profile}>{children}</AdminLayout>;
   }
 
-  // Otherwise use AppLayout for regular employees
+  // Otherwise use AppLayout for regular employees and Super Admins on employee routes
   return <AppLayout profile={profile}>{children}</AppLayout>;
 }

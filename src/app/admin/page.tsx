@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import AdminLayout from '@/components/AdminLayout';
 import AdminDashboardClient from './AdminDashboardClient';
 
 export default async function AdminDashboard() {
@@ -21,5 +22,9 @@ export default async function AdminDashboard() {
     redirect('/dashboard');
   }
 
-  return <AdminDashboardClient profile={profile} />;
+  return (
+    <AdminLayout profile={profile}>
+      <AdminDashboardClient profile={profile} />
+    </AdminLayout>
+  );
 }

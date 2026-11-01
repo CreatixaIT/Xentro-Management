@@ -31,7 +31,7 @@ const navigation: NavigationItem[] = [
   { name: 'Attendance', href: '/admin/attendance', icon: <Clock className="w-5 h-5" /> },
   { name: 'Projects', href: '/admin/projects', icon: <Folder className="w-5 h-5" /> },
   { name: 'Tasks', href: '/admin/tasks', icon: <CheckSquare className="w-5 h-5" /> },
-  { name: 'Settings', href: '/settings', icon: <Settings className="w-5 h-5" /> },
+  { name: 'Settings', href: '/admin/settings', icon: <Settings className="w-5 h-5" /> },
 ];
 
 export default function AdminLayout({ children, profile }: AdminLayoutProps) {
