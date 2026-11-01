@@ -27,10 +27,10 @@ const navigation: NavigationItem[] = [
   { name: 'Employees', href: '/admin/employees', icon: <Users className="w-5 h-5" /> },
   { name: 'Leave Requests', href: '/admin/leave-requests', icon: <Calendar className="w-5 h-5" /> },
   { name: 'Reset Requests', href: '/admin/reset-requests', icon: <Key className="w-5 h-5" /> },
-  { name: 'Inventory', href: '/inventory', icon: <Package className="w-5 h-5" /> },
+  { name: 'Inventory', href: '/admin/inventory', icon: <Package className="w-5 h-5" /> },
   { name: 'Attendance', href: '/admin/attendance', icon: <Clock className="w-5 h-5" /> },
-  { name: 'Projects', href: '/projects', icon: <Folder className="w-5 h-5" /> },
-  { name: 'Tasks', href: '/tasks', icon: <CheckSquare className="w-5 h-5" /> },
+  { name: 'Projects', href: '/admin/projects', icon: <Folder className="w-5 h-5" /> },
+  { name: 'Tasks', href: '/admin/tasks', icon: <CheckSquare className="w-5 h-5" /> },
   { name: 'Settings', href: '/settings', icon: <Settings className="w-5 h-5" /> },
 ];
 
