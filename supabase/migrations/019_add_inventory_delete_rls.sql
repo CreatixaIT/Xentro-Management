@@ -2,7 +2,9 @@
 -- Authenticated users can delete inventory items
 -- Using the same permission model as INSERT and UPDATE policies (all authenticated users)
 
-CREATE POLICY IF NOT EXISTS "Authenticated users can delete inventory"
+DROP POLICY IF EXISTS "Authenticated users can delete inventory" ON public.inventory;
+
+CREATE POLICY "Authenticated users can delete inventory"
   ON public.inventory
   FOR DELETE
   TO authenticated

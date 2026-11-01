@@ -31,7 +31,8 @@
       "Exec(ls)",
       "Exec(npm list)",
       "Exec(gh pr)",
-      "Exec(od)"
+      "Exec(od)",
+      "Exec(docker)"
     ]
   }
 }

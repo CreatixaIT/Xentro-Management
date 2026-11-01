@@ -76,9 +76,12 @@ ALTER TABLE public.task_assignments ENABLE ROW LEVEL SECURITY;
 -- TASK_ASSIGNMENTS RLS POLICIES
 -- ============================================================================
 
--- Drop any existing policies (from migrations 022-025 if they were applied)
+-- Drop any existing policies (from migrations 021-025 if they were applied)
+DROP POLICY IF EXISTS "Employees can view own assignments" ON public.task_assignments;
 DROP POLICY IF EXISTS "Employees can update own assignments" ON public.task_assignments;
 DROP POLICY IF EXISTS "Employees can update own assignment progress" ON public.task_assignments;
+DROP POLICY IF EXISTS "Service role can manage assignments" ON public.task_assignments;
+DROP POLICY IF EXISTS "Deny anonymous access to assignments" ON public.task_assignments;
 
 -- Employees can view their own assignments
 CREATE POLICY "Employees can view own assignments"
@@ -143,8 +146,11 @@ ALTER TABLE public.task_daily_updates ENABLE ROW LEVEL SECURITY;
 -- TASK_DAILY_UPDATES RLS POLICIES
 -- ============================================================================
 
--- Drop any existing policies (from migrations 022-025 if they were applied)
+-- Drop any existing policies (from migrations 021-025 if they were applied)
+DROP POLICY IF EXISTS "Employees can view own daily updates" ON public.task_daily_updates;
 DROP POLICY IF EXISTS "Employees can insert own daily updates" ON public.task_daily_updates;
+DROP POLICY IF EXISTS "Service role can manage daily updates" ON public.task_daily_updates;
+DROP POLICY IF EXISTS "Deny anonymous access to daily updates" ON public.task_daily_updates;
 
 -- Employees can view their own daily updates
 CREATE POLICY "Employees can view own daily updates"
@@ -213,6 +219,11 @@ ALTER TABLE public.task_activity_log ENABLE ROW LEVEL SECURITY;
 -- ============================================================================
 -- TASK_ACTIVITY_LOG RLS POLICIES
 -- ============================================================================
+
+-- Drop any existing policies (from migration 021 if it was applied)
+DROP POLICY IF EXISTS "Employees can view activity log for their assignments" ON public.task_activity_log;
+DROP POLICY IF EXISTS "Service role can manage activity logs" ON public.task_activity_log;
+DROP POLICY IF EXISTS "Deny anonymous access to activity logs" ON public.task_activity_log;
 
 -- Employees can view activity log for their assignments
 CREATE POLICY "Employees can view activity log for their assignments"
