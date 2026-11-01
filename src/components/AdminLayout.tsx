@@ -73,7 +73,7 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
   }, []);
 
   return (
-    <div className="min-h-screen relative overflow-hidden" style={{ backgroundColor: '#080B14' }}>
+    <div className="min-h-screen flex flex-col md:flex-row relative overflow-hidden" style={{ backgroundColor: '#080B14' }}>
       {/* Fixed Background Layer */}
       <div
         className="fixed inset-0"
@@ -111,9 +111,9 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
 
       {/* Floating Sidebar */}
       <aside
-        className={`fixed left-4 top-4 bottom-4 z-50 transition-all duration-300 ease-in-out
+        className={`fixed left-4 top-4 bottom-4 z-50 transition-all duration-300 ease-in-out flex-shrink-0
           ${sidebarCollapsed ? 'w-20' : 'w-72'}
-          md:static md:left-0 md:top-0 md:bottom-0
+          md:static md:h-screen md:left-0 md:top-0 md:bottom-0
           ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         `}
       >
@@ -206,7 +206,7 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 md:ml-72 relative z-10 transition-all duration-300" style={{ marginLeft: sidebarCollapsed ? '5rem' : '' }}>
+      <div className="flex-1 min-w-0 relative z-10 overflow-auto">
         {/* Header */}
         <header className="sticky top-0 z-30 px-3 md:px-4 lg:px-8 py-3 md:py-4">
           <div className="relative">
