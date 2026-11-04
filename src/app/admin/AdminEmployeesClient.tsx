@@ -38,6 +38,9 @@ export default function AdminEmployeesClient({ profile }: AdminEmployeesClientPr
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [pendingAction, setPendingAction] = useState<{ id: string; status: string } | null>(null);
 
   useEffect(() => {
     fetchEmployees();
@@ -68,18 +71,48 @@ export default function AdminEmployeesClient({ profile }: AdminEmployeesClientPr
     setSelectedEmployee(null);
   };
 
+  const handleStatusChange = (id: string, status: string) => {
+    if (status === 'SUSPENDED') {
+      setPendingAction({ id, status });
+      setShowConfirmDialog(true);
+    } else {
+      updateStatus(id, status);
+    }
+  };
+
   const updateStatus = async (id: string, status: string) => {
     try {
+      setUpdatingStatus(id);
       const response = await fetch('/api/admin/employees/status', {
-        method: 'POST',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, status }),
+        body: JSON.stringify({ employeeId: id, status }),
       });
-      if (!response.ok) throw new Error('Failed to update status');
-      fetchEmployees();
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update status');
+      }
+      await fetchEmployees();
+      alert('Status updated successfully');
     } catch (err) {
       console.error(err);
+      alert('Failed to update status. Please try again.');
+    } finally {
+      setUpdatingStatus(null);
     }
+  };
+
+  const confirmAction = () => {
+    if (pendingAction) {
+      setShowConfirmDialog(false);
+      updateStatus(pendingAction.id, pendingAction.status);
+      setPendingAction(null);
+    }
+  };
+
+  const cancelAction = () => {
+    setShowConfirmDialog(false);
+    setPendingAction(null);
   };
 
   const displayValue = (value: string | number | null) => value ?? 'N/A';
@@ -142,13 +175,34 @@ export default function AdminEmployeesClient({ profile }: AdminEmployeesClientPr
                     <td className="px-3 md:px-4 py-2 md:py-3">
                       <button onClick={() => openDetailsModal(emp)} className="text-xs md:text-sm mr-2 md:mr-3" style={{ color: '#8B5CF6' }}>View Details</button>
                       {emp.status === 'PENDING' && (
-                        <button onClick={() => updateStatus(emp.id, 'ACTIVE')} className="px-2 md:px-3 py-1 rounded text-xs md:text-sm mr-1 md:mr-2 transition-colors" style={{ backgroundColor: 'rgba(16, 185, 129, 0.20)', color: '#10B981' }}>Approve</button>
+                        <button 
+                          onClick={() => handleStatusChange(emp.id, 'ACTIVE')} 
+                          disabled={updatingStatus === emp.id}
+                          className="px-2 md:px-3 py-1 rounded text-xs md:text-sm mr-1 md:mr-2 transition-colors disabled:opacity-50"
+                          style={{ backgroundColor: 'rgba(16, 185, 129, 0.20)', color: '#10B981' }}
+                        >
+                          {updatingStatus === emp.id ? 'Processing...' : 'Approve'}
+                        </button>
                       )}
                       {emp.status === 'ACTIVE' && (
-                        <button onClick={() => updateStatus(emp.id, 'SUSPENDED')} className="px-2 md:px-3 py-1 rounded text-xs md:text-sm mr-1 md:mr-2 transition-colors" style={{ backgroundColor: 'rgba(239, 68, 68, 0.20)', color: '#EF4444' }}>Suspend</button>
+                        <button 
+                          onClick={() => handleStatusChange(emp.id, 'SUSPENDED')} 
+                          disabled={updatingStatus === emp.id}
+                          className="px-2 md:px-3 py-1 rounded text-xs md:text-sm mr-1 md:mr-2 transition-colors disabled:opacity-50"
+                          style={{ backgroundColor: 'rgba(239, 68, 68, 0.20)', color: '#EF4444' }}
+                        >
+                          {updatingStatus === emp.id ? 'Processing...' : 'Suspend'}
+                        </button>
                       )}
                       {emp.status === 'SUSPENDED' && (
-                        <button onClick={() => updateStatus(emp.id, 'ACTIVE')} className="px-2 md:px-3 py-1 rounded text-xs md:text-sm transition-colors" style={{ backgroundColor: 'rgba(139, 92, 246, 0.20)', color: '#8B5CF6' }}>Reactivate</button>
+                        <button 
+                          onClick={() => handleStatusChange(emp.id, 'ACTIVE')} 
+                          disabled={updatingStatus === emp.id}
+                          className="px-2 md:px-3 py-1 rounded text-xs md:text-sm transition-colors disabled:opacity-50"
+                          style={{ backgroundColor: 'rgba(139, 92, 246, 0.20)', color: '#8B5CF6' }}
+                        >
+                          {updatingStatus === emp.id ? 'Processing...' : 'Reactivate'}
+                        </button>
                       )}
                     </td>
                   </tr>
@@ -159,6 +213,33 @@ export default function AdminEmployeesClient({ profile }: AdminEmployeesClientPr
           {employees.length === 0 && <div className="p-6 md:p-8 text-center" style={{ color: '#8995AD', fontSize: '0.875rem' }}>No employees found</div>}
         </div>
       </div>
+
+      {showConfirmDialog && pendingAction && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="backdrop-blur-xl rounded-2xl shadow-2xl p-6 max-w-md w-full" style={{ backgroundColor: 'rgba(20, 27, 45, 0.72)', border: '1px solid rgba(255, 255, 255, 0.10)' }}>
+            <h2 className="text-xl font-bold mb-4" style={{ color: '#F4F7FF' }}>Confirm Suspension</h2>
+            <p className="mb-6" style={{ color: '#B4BED1' }}>
+              Are you sure you want to suspend this employee? They will lose access to the system.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={cancelAction}
+                className="px-4 py-2 rounded-xl transition-colors"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', color: '#F4F7FF' }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmAction}
+                className="px-4 py-2 rounded-xl transition-colors"
+                style={{ backgroundColor: 'rgba(239, 68, 68, 0.20)', color: '#EF4444' }}
+              >
+                Confirm Suspend
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showDetailsModal && selectedEmployee && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
